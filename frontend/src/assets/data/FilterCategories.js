@@ -1,0 +1,18 @@
+export const categories = [
+  { category: "category", value: "Home Decor" },
+  { category: "category", value: "Basics" },
+  { category: "category", value: "Plants" },
+  { category: "category", value: "Furniture" },
+  { category: "category", value: "Hardwoods" },
+  { category: "category", value: "Demo Products" },
+  { category: "category", value: "Accessories" },
+  { category: "color", value: "Beige" },
+  { category: "color", value: "Black" },
+  { category: "color", value: "Rose" },
+  { category: "color", value: "Gold" },
+  { category: "color", value: "White" },
+  { category: "material", value: "Chrome" },
+  { category: "material", value: "Concrete" },
+  { category: "material", value: "Metal" },
+  { category: "material", value: "Wood" },
+];

@@ -1,0 +1,229 @@
+/* -------------- Navbar --------------- */
+.MuiButtonBase-root.MuiButton-root.MuiButton-text.MuiButton-textPrimary.MuiButton-sizeMedium.MuiButton-textSizeMedium.MuiButton-root.MuiButton-text.MuiButton-textPrimary.MuiButton-sizeMedium.MuiButton-textSizeMedium.css-1q39md6-MuiButtonBase-root-MuiButton-root {
+  color: #000 !important;
+}
+
+.MuiButtonBase-root.MuiButton-root.MuiButton-text.MuiButton-textPrimary.MuiButton-sizeMedium.MuiButton-textSizeMedium.MuiButton-root.MuiButton-text.MuiButton-textPrimary.MuiButton-sizeMedium.MuiButton-textSizeMedium.css-1q39md6-MuiButtonBase-root-MuiButton-root:hover {
+  background-color: transparent !important;
+}
+
+.MuiBadge-badge.MuiBadge-standard.MuiBadge-anchorOriginTopRight.MuiBadge-anchorOriginTopRightRectangular.MuiBadge-overlapRectangular.MuiBadge-colorPrimary.css-106c1u2-MuiBadge-badge {
+  background-color: #7d95ff !important;
+}
+
+/* ----------------- Login/Register Modal ---------------- */
+/* Input label color */
+.css-11qvwfa-MuiFormLabel-root-MuiInputLabel-root.Mui-focused {
+  color: #7d95ff !important;
+}
+
+/* Input focus border-bottom color */
+.css-2y464i-MuiInputBase-root-MuiFilledInput-root:after {
+  border-bottom: 2px solid #7d95ff !important;
+}
+
+.MuiBox-root .css-19kzrtu {
+  padding: 20px 0 !important;
+}
+
+.submit-form-btn {
+  margin-top: 20px !important;
+  background-color: #000 !important;
+  padding: 10px !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px !important;
+}
+
+/* ---------- Cart and wishlist ------------ */
+.cart {
+  padding: 80px;
+  padding-top: 50px;
+}
+
+.cart-list {
+  display: flex;
+  align-items: center;
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(206, 206, 206, 0.2);
+}
+
+.cart-list select {
+  width: 100%;
+  border: 1px solid #929292;
+  padding: 5px 20px;
+  outline: none;
+}
+
+.cart-list h5 {
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 1px;
+  overflow-y: hidden;
+}
+
+.cart-list p {
+  overflow-y: hidden;
+}
+
+.cart-list:last-child {
+  border-bottom: none;
+}
+
+.cart-list img {
+  width: 100%;
+  margin: auto;
+}
+
+.checkout {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  outline: none;
+  padding: 10px 20px;
+  margin-top: 30px;
+  text-transform: uppercase;
+  font-size: 16px;
+  font-weight: "700";
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.cart-totals {
+  background-color: #f3f3f3;
+  padding: 50px 20px;
+}
+
+.cart-totals h3,
+.cart-totals p {
+  overflow-y: hidden;
+}
+
+.add-to-cart,
+.go-to-cart,
+.wishlist-btn {
+  text-transform: uppercase;
+  text-align: center;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  padding: 12px 20px;
+  border-radius: 0;
+  background-color: #000;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.add-to-cart:hover,
+.go-to-cart:hover {
+  background-color: black;
+}
+
+.go-to-cart:hover {
+  color: #fff;
+}
+
+/* -------------- Empty cart -------------- */
+.empty-cart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lottie-img {
+  width: 20%;
+}
+
+.empty-cart-container a {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  outline: none;
+  padding: 10px 20px;
+  text-transform: uppercase;
+  font-size: 16px;
+  font-weight: "700";
+  letter-spacing: 2px;
+}
+
+.empty-cart-container a:hover {
+  color: #fff;
+}
+
+/* Responsive */
+@media only screen and (max-width: 992px) {
+  .cart {
+    padding: 40px !important;
+  }
+
+  .cart-totals {
+    margin-top: 60px;
+  }
+
+  .lottie-img {
+    width: 40%;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .checkout,
+  .empty-cart-container a {
+    padding: 6px 15px;
+    font-size: 12px;
+  }
+
+  .cart-list h5 {
+    font-size: 16px;
+  }
+
+  .lottie-img {
+    width: 60%;
+  }
+}
+
+/* ----------- Footer ------------ */
+.footer {
+  padding-bottom: 80px;
+  color: #000;
+}
+
+.footer-divider {
+  margin-bottom: 80px;
+}
+
+.footer h5 {
+  margin-bottom: 30px;
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: 1px;
+  overflow-y: hidden;
+}
+
+.footer a {
+  display: block;
+  color: #929292;
+  font-size: 15px;
+  font-weight: 300;
+  overflow-y: hidden;
+  margin-bottom: 15px;
+}
+
+/* Footer Responsive */
+@media only screen and (max-width: 992px) {
+  .footer {
+    padding: 40px;
+    text-align: center;
+  }
+  .footer h5 {
+    margin: 10px 0;
+  }
+}
+
+/* ---------- Common ----------- */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
