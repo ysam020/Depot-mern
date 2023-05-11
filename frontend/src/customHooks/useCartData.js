@@ -6,7 +6,7 @@ function useCartData() {
   const [cartData, setCartData] = useState([]);
   const [cartQty, setCartQty] = useState(cartData.length);
   const [loading, setLoading] = useState(true);
-  const email = useSelector((state) => state.userReducer.email);
+  const email = useSelector((state) => state.users.email);
 
   useEffect(() => {
     getCartData(setCartData, email).then(() => setLoading(false));

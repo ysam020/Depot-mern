@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../styles/home.css";
 import { Container, Row, Col } from "react-bootstrap";
 import Lottie from "lottie-react";
@@ -7,14 +7,18 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Snackbar from "@mui/material/Snackbar";
 import Pagination from "../components/productComponents/Pagination";
 import ProductFilters from "../components/productComponents/ProductFilters";
-import useProductsData from "../customHooks/productsData";
+import { connect } from "react-redux";
+import { fetchProducts } from "../redux/actions/fetchProducts";
 
-function Home() {
+function Home(props) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [filterCategory, setFilterCategory] = useState("");
+  const [sortCategory, setSortCategory] = useState("");
 
-  const { data, setData, loading, setLoading } =
-    useProductsData(filterCategory);
+  useEffect(() => {
+    props.fetchProducts(filterCategory, sortCategory);
+    // eslint-disable-next-line
+  }, [filterCategory, sortCategory]);
 
   const handleCloseSnackbar = (event, reason) => {
     if (reason === "clickaway") {
@@ -60,18 +64,21 @@ function Home() {
             <ProductFilters
               filterCategory={filterCategory}
               setFilterCategory={setFilterCategory}
-              data={data}
-              setData={setData}
-              setLoading={setLoading}
+              sortCategory={sortCategory}
+              setSortCategory={setSortCategory}
+              data={props.products.data}
             />
           </Col>
           <Col xs={10}>
-            {loading ? (
+            {props.products.loading ? (
               <div className="loading">
                 <CircularProgress />
               </div>
             ) : (
-              <Pagination data={data} setOpenSnackbar={setOpenSnackbar} />
+              <Pagination
+                data={props.products.data}
+                setOpenSnackbar={setOpenSnackbar}
+              />
             )}
           </Col>
         </Row>
@@ -86,4 +93,17 @@ function Home() {
   );
 }
 
-export default Home;
+const mapStateToProps = (state) => {
+  return {
+    products: state.products,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    fetchProducts: (filterCategory, sortCategory) =>
+      dispatch(fetchProducts(filterCategory, sortCategory)),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Home);

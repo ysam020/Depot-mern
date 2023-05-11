@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EmptyCart from "../components/EmptyCart";
-import { createStyles, makeStyles } from "@material-ui/core/styles";
 import { Tooltip } from "@material-ui/core";
 import CircularProgress from "@mui/material/CircularProgress";
 import useCartData from "../customHooks/useCartData";
@@ -12,18 +11,7 @@ import { ProductContext } from "../contexts/Context";
 import { useSelector } from "react-redux";
 import { updateCart } from "../utils/updateCart";
 
-const useStyles = makeStyles((theme) =>
-  createStyles({
-    deleteIcon: {
-      color: "#F15C6D !important",
-    },
-  })
-);
-
 function Cart(props) {
-  // MUI Styles
-  const classes = useStyles();
-
   const email = useSelector((state) => state.userReducer.email);
   const { cartData, setCartData } = useContext(ProductContext);
   const { loading } = useCartData();
@@ -96,7 +84,7 @@ function Cart(props) {
                     <Tooltip title="Remove from cart">
                       <IconButton
                         onClick={() => props.removeFromCart(email, product.id)}
-                        className={classes.deleteIcon}
+                        sx={{ color: "#F15C6D" }}
                       >
                         <DeleteIcon />
                       </IconButton>

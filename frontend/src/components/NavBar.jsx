@@ -11,7 +11,6 @@ import LocalMallIcon from "@mui/icons-material/LocalMall";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import Badge from "@mui/material/Badge";
 import { Link } from "react-router-dom";
-import { createStyles, makeStyles } from "@material-ui/core/styles";
 import Login from "./Login";
 import { useSelector } from "react-redux";
 import useCartData from "../customHooks/useCartData";
@@ -20,26 +19,8 @@ import useNavbarSettings from "../customHooks/navbarSettings";
 import useLoginModal from "../customHooks/loginModal";
 import useNavbarMenu from "../customHooks/navbarMenu";
 
-const useStyles = makeStyles(() =>
-  createStyles({
-    cartIcon: {
-      color: "#000",
-      width: "30px !important",
-      height: "30px !important",
-    },
-    wishlistIcon: {
-      color: "#F15C6D",
-      width: "30px !important",
-      height: "30px !important",
-    },
-  })
-);
-
 export default function Navbar(props) {
-  // MUI Styles
-  const classes = useStyles();
-
-  const { name, email } = useSelector((state) => state.userReducer);
+  const { name, email } = useSelector((state) => state.users);
   const settings = useNavbarSettings();
   const { openModal, handleOpenModal, handleCloseModal } = useLoginModal();
   const { anchorElUser, handleOpenUserMenu, handleCloseUserMenu } =
@@ -101,7 +82,13 @@ export default function Navbar(props) {
                   showZero
                   color="primary"
                 >
-                  <FavoriteIcon className={classes.wishlistIcon} />
+                  <FavoriteIcon
+                    sx={{
+                      color: "#F15C6D",
+                      width: "30px !important",
+                      height: "30px !important",
+                    }}
+                  />
                 </Badge>
               </Link>
             </IconButton>
@@ -113,7 +100,13 @@ export default function Navbar(props) {
             >
               <Link to="/cart">
                 <Badge badgeContent={props.cartQty} showZero color="primary">
-                  <LocalMallIcon className={classes.cartIcon} />
+                  <LocalMallIcon
+                    sx={{
+                      color: "#000",
+                      width: "30px !important",
+                      height: "30px !important",
+                    }}
+                  />
                 </Badge>
               </Link>
             </IconButton>

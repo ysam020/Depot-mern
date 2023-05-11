@@ -6,7 +6,6 @@ import {
   FormLabel,
 } from "@material-ui/core";
 import { categories } from "../../assets/data/FilterCategories";
-import { handleProductSorting } from "../../utils/handleProductSorting";
 
 function ProductFilters(props) {
   let displayCategoryLabel = true;
@@ -18,9 +17,7 @@ function ProductFilters(props) {
       <select
         name="productSort"
         id="productSort"
-        onChange={(e) =>
-          handleProductSorting(e, props.data, props.setData, props.setLoading)
-        }
+        onChange={(e) => props.setSortCategory(e.target.value)}
       >
         <option value="">Sort by</option>
         <option value="Sort by Price: Low to high">
@@ -57,7 +54,11 @@ function ProductFilters(props) {
                 <div>
                   <br />
                   <FormLabel>
-                    {category === "color" ? "Color" : "Material"}
+                    {category === "category"
+                      ? "Category"
+                      : category === "color"
+                      ? "Color"
+                      : "Material"}
                   </FormLabel>
                 </div>
               )}

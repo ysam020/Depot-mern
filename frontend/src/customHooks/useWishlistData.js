@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 function useWishlistData() {
   const [wishlistData, setWishlistData] = useState([]);
   const [wishlistQty, setWishlistQty] = useState(wishlistData.length);
-  const email = useSelector((state) => state.userReducer.email);
+  const email = useSelector((state) => state.users.email);
 
   useEffect(() => {
     getWishlistData(setWishlistData, email);

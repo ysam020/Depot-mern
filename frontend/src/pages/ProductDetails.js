@@ -15,7 +15,7 @@ function ProductDetails() {
   const productId = params.productId;
   const { data, loading } = useProductDetails(productId);
 
-  const email = useSelector((state) => state.userReducer.email);
+  const email = useSelector((state) => state.users.email);
 
   const context = useContext(ProductContext);
 

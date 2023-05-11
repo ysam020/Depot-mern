@@ -150,7 +150,7 @@ mongoose
     const Wishlist = new mongoose.model("Wishlist", wishlistSchema);
     const Address = new mongoose.model("Address", addressSchema);
 
-    //Routes
+    // Routes
     // Login
     app.post("/login", (req, res) => {
       const { email, password } = req.body;
@@ -183,7 +183,7 @@ mongoose
           if (user) {
             res.send({ message: "User already registered" });
           } else {
-            bcrypt.hash(password, 10, function (err, hashedPassword) {
+            bcrypt.hash(password, 10, (err, hashedPassword) => {
               if (err) {
                 res.send(err);
               } else {
@@ -196,7 +196,7 @@ mongoose
                   .save()
                   .then(() => {
                     res.send({
-                      message: "Successfully registered, please login now.",
+                      message: "Successfully registered, login now.",
                     });
                   })
                   .catch((err) => {
@@ -272,7 +272,8 @@ mongoose
 
       try {
         const cart = await Cart.findOne({ email: email });
-        const products = cart ? cart.product || [] : []; // if cart is falsy, set products to an empty array
+        // if cart is falsy, set products to an empty array
+        const products = cart ? cart.product || [] : [];
 
         res.status(200).json(products);
       } catch (error) {

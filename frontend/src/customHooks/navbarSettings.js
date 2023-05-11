@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { Signout } from "../actions/userAction";
+import { Signout } from "../redux/actions/userAction";
 
 function useNavbarSettings() {
   const navigate = useNavigate();

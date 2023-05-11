@@ -5,7 +5,6 @@ import Rating from "@mui/material/Rating";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { IconButton } from "@mui/material";
 import { Row, Col } from "react-bootstrap";
-import { createStyles, makeStyles } from "@material-ui/core/styles";
 import { useSelector } from "react-redux";
 import { getCartData } from "../../utils/getCartData";
 import { getWishlistData } from "../../utils/getWishlistData";
@@ -13,21 +12,9 @@ import ReactPaginate from "react-paginate";
 import { ProductContext } from "../../contexts/Context";
 import usePagination from "../../customHooks/pagination";
 
-const useStyles = makeStyles(() =>
-  createStyles({
-    wishlistIcon: {
-      color: "#F15C6D !important",
-      width: "20px !important",
-      height: "20px !important",
-    },
-  })
-);
-
 function Pagination(props) {
-  const classes = useStyles();
-
   const context = useContext(ProductContext);
-  const email = useSelector((state) => state.userReducer.email);
+  const email = useSelector((state) => state.users.email);
   const { productsPerPage, pageCount, pagesVisited, changePage } =
     usePagination(props.data);
 
@@ -73,10 +60,14 @@ function Pagination(props) {
                           }}
                         >
                           <FavoriteIcon
-                            className={
+                            sx={
                               isProductWishlisted(context.wishlistData, id)
-                                ? classes.wishlistIcon
-                                : ""
+                                ? {
+                                    color: "#F15C6D !important",
+                                    width: "20px !important",
+                                    height: "20px !important",
+                                  }
+                                : {}
                             }
                           />
                         </IconButton>

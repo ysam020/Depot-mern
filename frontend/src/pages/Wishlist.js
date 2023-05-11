@@ -3,7 +3,6 @@ import { Container, Row, Col } from "react-bootstrap";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EmptyCart from "../components/EmptyCart";
-import { createStyles, makeStyles } from "@material-ui/core/styles";
 import { Tooltip } from "@material-ui/core";
 import CircularProgress from "@mui/material/CircularProgress";
 import { getCartData } from "../utils/getCartData";
@@ -13,18 +12,7 @@ import { ProductContext } from "../contexts/Context";
 import useWishlistData from "../customHooks/useWishlistData";
 import useQuickViewModal from "../customHooks/quickViewModal";
 
-const useStyles = makeStyles((theme) =>
-  createStyles({
-    deleteIcon: {
-      color: "#F15C6D !important",
-    },
-  })
-);
-
 function Wishlist(props) {
-  // MUI Styles
-  const classes = useStyles();
-
   const { email, loading } = useWishlistData();
   const { wishlistData, setCartData, cartData, addToCart } =
     useContext(ProductContext);
@@ -104,7 +92,7 @@ function Wishlist(props) {
                         onClick={() =>
                           props.removeFromWishlist(email, product.id)
                         }
-                        className={classes.deleteIcon}
+                        sx={{ color: "#F15C6D" }}
                       >
                         <DeleteIcon />
                       </IconButton>
