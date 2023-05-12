@@ -3,7 +3,7 @@ import { Container, Row, Col } from "react-bootstrap";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EmptyCart from "../components/EmptyCart";
-import { Tooltip } from "@material-ui/core";
+import Tooltip from "@mui/material/Tooltip";
 import CircularProgress from "@mui/material/CircularProgress";
 import { getCartData } from "../utils/getCartData";
 import { Link } from "react-router-dom";

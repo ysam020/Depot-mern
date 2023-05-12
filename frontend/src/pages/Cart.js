@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EmptyCart from "../components/EmptyCart";
-import { Tooltip } from "@material-ui/core";
+import Tooltip from "@mui/material/Tooltip";
 import CircularProgress from "@mui/material/CircularProgress";
 import useCartData from "../customHooks/useCartData";
 import { ProductContext } from "../contexts/Context";
