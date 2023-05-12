@@ -6,7 +6,7 @@ export async function saveAddress(
   setPersonalDetails,
   setBillingFormSubmitted
 ) {
-  axios.post(`http://localhost:9002/${email}/address`, values);
+  axios.post(`https://depot-d06m.onrender.com/${email}/address`, values);
 
   setPersonalDetails(values);
   setBillingFormSubmitted(true);

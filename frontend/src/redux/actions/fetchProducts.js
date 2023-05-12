@@ -16,7 +16,7 @@ export const fetchProducts = (filterCategory, sortCategory) => {
   return (dispatch) => {
     dispatch(fetchProductsRequest());
     axios
-      .get("http://localhost:9002/products")
+      .get("https://depot-d06m.onrender.com/products")
       .then((res) => {
         let data = res.data;
 

@@ -9,7 +9,7 @@ function useProductDetails(productId) {
     async function getProductList() {
       try {
         const response = await axios.get(
-          `http://localhost:9002/products/${productId}`
+          `https://depot-d06m.onrender.com/products/${productId}`
         );
         setData(response.data);
         setLoading(false);

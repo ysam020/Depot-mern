@@ -8,26 +8,28 @@ function useLogin() {
   const dispatch = useDispatch();
 
   async function login(values, handleCloseModal) {
-    await axios.post("http://localhost:9002/login", values).then((res) => {
-      if (res.data.message === "Login Successfull") {
-        dispatch(
-          Signin({ name: res.data.user.name, email: res.data.user.email })
-        );
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            name: res.data.user.name,
-            email: res.data.user.email,
-          })
-        );
-        navigate("/");
-        handleCloseModal();
-      } else if (res.data.message === "Password didn't match") {
-        alert("Password didn't match");
-      } else {
-        alert("User not registered");
-      }
-    });
+    await axios
+      .post("https://depot-d06m.onrender.com/login", values)
+      .then((res) => {
+        if (res.data.message === "Login Successfull") {
+          dispatch(
+            Signin({ name: res.data.user.name, email: res.data.user.email })
+          );
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              name: res.data.user.name,
+              email: res.data.user.email,
+            })
+          );
+          navigate("/");
+          handleCloseModal();
+        } else if (res.data.message === "Password didn't match") {
+          alert("Password didn't match");
+        } else {
+          alert("User not registered");
+        }
+      });
 
     handleCloseModal();
   }

@@ -3,7 +3,7 @@ import axios from "axios";
 export async function updateCart(email, productId, qty, cartData, setCartData) {
   try {
     const response = await axios.put(
-      `http://localhost:9002/${email}/cart/${productId}`,
+      `https://depot-d06m.onrender.com/${email}/cart/${productId}`,
       {
         qty,
       }

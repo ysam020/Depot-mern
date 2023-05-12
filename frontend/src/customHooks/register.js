@@ -5,9 +5,11 @@ function useRegister() {
   const navigate = useNavigate();
 
   async function register(values, handleCloseModal) {
-    await axios.post("http://localhost:9002/register", values).then((res) => {
-      navigate("/login");
-    });
+    await axios
+      .post("https://depot-d06m.onrender.com/register", values)
+      .then((res) => {
+        navigate("/login");
+      });
 
     handleCloseModal();
   }
