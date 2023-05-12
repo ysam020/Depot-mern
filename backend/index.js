@@ -2,17 +2,18 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import * as dotenv from "dotenv";
+dotenv.config();
+
+console.log(process.env);
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(cors());
 
-const uri =
-  "mongodb+srv://ysam020:ysam24369@depot.swnzl1q.mongodb.net/depot?retryWrites=true&w=majority";
-
 mongoose
-  .connect(uri, {
+  .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
