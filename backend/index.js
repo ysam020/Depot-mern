@@ -5,8 +5,6 @@ import bcrypt from "bcrypt";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-console.log(process.env);
-
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded());
