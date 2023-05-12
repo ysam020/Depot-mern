@@ -71,9 +71,14 @@
 
 /* ------Section 2- Home Shop-------- */
 /* ----------- Product filters ---------------- */
+.product-filters {
+  padding: 30px;
+}
+
 .product-filters select {
   padding: 5px;
   outline: none;
+  background-color: #f3f3f3;
 }
 
 .product-filters button {
@@ -99,6 +104,12 @@
   align-items: center;
   justify-content: center;
   position: relative;
+}
+
+.product-img span {
+  position: absolute;
+  top: 5px;
+  right: 5px;
 }
 
 .product-img img {
@@ -242,15 +253,6 @@
 @media only screen and (max-width: 576px) {
   .home-shop {
     width: 80% !important;
-  }
-
-  .product-img {
-    min-height: 400px;
-  }
-
-  .product-img img {
-    width: 70%;
-    max-height: 350px;
   }
 }
 

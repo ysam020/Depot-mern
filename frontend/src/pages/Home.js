@@ -9,11 +9,15 @@ import Pagination from "../components/productComponents/Pagination";
 import ProductFilters from "../components/productComponents/ProductFilters";
 import { connect } from "react-redux";
 import { fetchProducts } from "../redux/actions/fetchProducts";
+import Drawer from "@mui/material/Drawer";
+import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
+import { IconButton } from "@mui/material";
 
 function Home(props) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [filterCategory, setFilterCategory] = useState("");
   const [sortCategory, setSortCategory] = useState("");
+  const [drawer, setDrawer] = useState(false);
 
   useEffect(() => {
     props.fetchProducts(filterCategory, sortCategory);
@@ -25,6 +29,17 @@ function Home(props) {
       return;
     }
     setOpenSnackbar(false);
+  };
+
+  const toggleDrawer = () => (event) => {
+    if (
+      event.type === "keydown" &&
+      (event.key === "Tab" || event.key === "Shift")
+    ) {
+      return;
+    }
+
+    setDrawer(!drawer);
   };
 
   return (
@@ -59,17 +74,36 @@ function Home(props) {
 
       {/* Home Shop Section */}
       <Container className="home-shop" id="home-shop">
+        <Drawer
+          variant="temporary"
+          anchor="left"
+          open={drawer}
+          onClose={toggleDrawer(false)}
+          PaperProps={{
+            style: {
+              backgroundColor: "#f3f3f3", // set the desired background color here
+            },
+          }}
+        >
+          <ProductFilters
+            filterCategory={filterCategory}
+            setFilterCategory={setFilterCategory}
+            sortCategory={sortCategory}
+            setSortCategory={setSortCategory}
+            data={props.products.data}
+          />
+        </Drawer>
         <Row>
-          <Col xs={2}>
-            <ProductFilters
-              filterCategory={filterCategory}
-              setFilterCategory={setFilterCategory}
-              sortCategory={sortCategory}
-              setSortCategory={setSortCategory}
-              data={props.products.data}
-            />
-          </Col>
-          <Col xs={10}>
+          <div
+            onClick={toggleDrawer(true)}
+            style={{ width: "auto", cursor: "pointer", marginBottom: "20px" }}
+          >
+            <IconButton>
+              <FilterListRoundedIcon />
+            </IconButton>
+            Sort and filter
+          </div>
+          <Col xs={12}>
             {props.products.loading ? (
               <div className="loading">
                 <CircularProgress />

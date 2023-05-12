@@ -35,17 +35,19 @@ function Pagination(props) {
             const { id, title, price, image, rating } = products;
 
             return (
-              <Col lg={3} sm={6} xs={12} key={id} className="product-col">
+              <Col
+                lg={3}
+                md={4}
+                sm={6}
+                xs={12}
+                key={id}
+                className="product-col"
+              >
                 <Link to={`/product/${id}`}>
                   <div className="product-img">
                     <Tooltip title="Add to wishlist">
                       <span>
                         <IconButton
-                          style={{
-                            position: "absolute",
-                            top: "5px",
-                            right: "5px",
-                          }}
                           disabled={isProductWishlisted(
                             context.wishlistData,
                             id
