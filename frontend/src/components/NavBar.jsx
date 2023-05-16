@@ -76,7 +76,7 @@ export default function Navbar(props) {
               sx={{ marginLeft: "10px" }}
               disableRipple
             >
-              <Link to="/wishlist">
+              <Link to="/wishlist" className="navbar-link">
                 <Badge
                   badgeContent={props.wishlistQty}
                   showZero
@@ -98,7 +98,7 @@ export default function Navbar(props) {
               sx={{ marginLeft: "10px" }}
               disableRipple
             >
-              <Link to="/cart">
+              <Link to="/cart" className="navbar-link">
                 <Badge badgeContent={props.cartQty} showZero color="primary">
                   <LocalMallIcon
                     sx={{

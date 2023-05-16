@@ -11,6 +11,15 @@
   background-color: #7d95ff !important;
 }
 
+/* Navbar badges */
+.navbar-link {
+  overflow: visible !important;
+}
+
+.navbar-link span {
+  overflow: visible !important;
+}
+
 /* ----------------- Login/Register Modal ---------------- */
 /* Input label color */
 .css-11qvwfa-MuiFormLabel-root-MuiInputLabel-root.Mui-focused {

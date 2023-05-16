@@ -6,6 +6,7 @@
   font-family: "Catamaran", sans-serif !important;
   text-decoration: none !important;
   box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 body {

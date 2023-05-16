@@ -8,13 +8,11 @@ import Tooltip from "@mui/material/Tooltip";
 import CircularProgress from "@mui/material/CircularProgress";
 import useCartData from "../customHooks/useCartData";
 import { ProductContext } from "../contexts/Context";
-import { useSelector } from "react-redux";
 import { updateCart } from "../utils/updateCart";
 
 function Cart(props) {
-  const email = useSelector((state) => state.userReducer.email);
   const { cartData, setCartData } = useContext(ProductContext);
-  const { loading } = useCartData();
+  const { email, loading } = useCartData();
 
   useEffect(() => {
     document.title = "Cart - Depot";
