@@ -1,9 +1,11 @@
 import React from "react";
 import { Container, Row, Col } from "react-bootstrap";
+import useSelectors from "../../customHooks/useSelectors";
 
-function CheckoutSummary(props) {
-  const total_price = props.cartData.reduce((accumeletor, item) => {
-    return accumeletor + item.price * item.qty;
+function CheckoutSummary() {
+  const { cartData } = useSelectors();
+  const total_price = cartData.cart.reduce((accumeletor, item) => {
+    return accumeletor + item.price * item.qty; // get total cost of products in cart
   }, 0);
 
   return (
@@ -16,7 +18,7 @@ function CheckoutSummary(props) {
           <h6>Subtotal</h6>
         </Col>
       </Row>
-      {props.cartData.map((product, id) => {
+      {cartData.cart.map((product, id) => {
         return (
           <Row key={id} className="order-details-row">
             <Col sm={8}>

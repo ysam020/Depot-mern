@@ -8,7 +8,8 @@ function useRegister() {
     await axios
       .post("https://depot-d06m.onrender.com/register", values)
       .then((res) => {
-        navigate("/login");
+        navigate("/");
+        alert(res.data.message);
       });
 
     handleCloseModal();

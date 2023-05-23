@@ -1,18 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { Signout } from "../redux/actions/userAction";
+import { signout } from "../redux/features/users/users";
 
 function useNavbarSettings() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const settings = [
-    {
-      name: "Orders",
-      onClick: () => {
-        navigate("/orders");
-      },
-    },
     {
       name: "Cart",
       onClick: () => {
@@ -31,7 +25,7 @@ function useNavbarSettings() {
         navigate("/addresses");
       },
     },
-    { name: "Logout", onClick: () => dispatch(Signout()) },
+    { name: "Logout", onClick: () => dispatch(signout()) },
   ];
 
   return settings;

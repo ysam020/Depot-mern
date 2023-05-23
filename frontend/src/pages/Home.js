@@ -7,20 +7,24 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Snackbar from "@mui/material/Snackbar";
 import Pagination from "../components/productComponents/Pagination";
 import ProductFilters from "../components/productComponents/ProductFilters";
-import { connect } from "react-redux";
-import { fetchProducts } from "../redux/actions/fetchProducts";
+import { useDispatch } from "react-redux";
 import Drawer from "@mui/material/Drawer";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import { IconButton } from "@mui/material";
+import { fetchProducts } from "../redux/features/products/products";
+import useSelectors from "../customHooks/useSelectors";
 
-function Home(props) {
+function Home() {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [filterCategory, setFilterCategory] = useState("");
   const [sortCategory, setSortCategory] = useState("");
   const [drawer, setDrawer] = useState(false);
 
+  const dispatch = useDispatch();
+  const { productsData } = useSelectors();
+
   useEffect(() => {
-    props.fetchProducts(filterCategory, sortCategory);
+    dispatch(fetchProducts({ filterCategory, sortCategory }));
     // eslint-disable-next-line
   }, [filterCategory, sortCategory]);
 
@@ -31,6 +35,7 @@ function Home(props) {
     setOpenSnackbar(false);
   };
 
+  // Sorting and filter drawer
   const toggleDrawer = () => (event) => {
     if (
       event.type === "keydown" &&
@@ -81,7 +86,7 @@ function Home(props) {
           onClose={toggleDrawer(false)}
           PaperProps={{
             style: {
-              backgroundColor: "#f3f3f3", // set the desired background color here
+              backgroundColor: "#f3f3f3",
             },
           }}
         >
@@ -90,7 +95,7 @@ function Home(props) {
             setFilterCategory={setFilterCategory}
             sortCategory={sortCategory}
             setSortCategory={setSortCategory}
-            data={props.products.data}
+            data={productsData.products}
           />
         </Drawer>
         <Row>
@@ -104,15 +109,12 @@ function Home(props) {
             Sort and filter
           </div>
           <Col xs={12}>
-            {props.products.loading ? (
+            {productsData.loading ? (
               <div className="loading">
                 <CircularProgress />
               </div>
             ) : (
-              <Pagination
-                data={props.products.data}
-                setOpenSnackbar={setOpenSnackbar}
-              />
+              <Pagination setOpenSnackbar={setOpenSnackbar} />
             )}
           </Col>
         </Row>
@@ -127,17 +129,4 @@ function Home(props) {
   );
 }
 
-const mapStateToProps = (state) => {
-  return {
-    products: state.products,
-  };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    fetchProducts: (filterCategory, sortCategory) =>
-      dispatch(fetchProducts(filterCategory, sortCategory)),
-  };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Home);
+export default Home;

@@ -1,36 +1,42 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EmptyCart from "../components/EmptyCart";
 import Tooltip from "@mui/material/Tooltip";
 import CircularProgress from "@mui/material/CircularProgress";
-import { getCartData } from "../utils/getCartData";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import QuickViewModal from "../components/productComponents/QuickViewModal";
-import { ProductContext } from "../contexts/Context";
-import useWishlistData from "../customHooks/useWishlistData";
 import useQuickViewModal from "../customHooks/quickViewModal";
+import useSelectors from "../customHooks/useSelectors";
+import { useDispatch } from "react-redux";
+import { fetchCartData, addProductToCart } from "../redux/features/cart/cart";
+import {
+  fetchWishlistData,
+  removeProductFromWishlist,
+} from "../redux/features/wishlist/wishlist";
 
-function Wishlist(props) {
-  const { email, loading } = useWishlistData();
-  const { wishlistData, setCartData, cartData, addToCart } =
-    useContext(ProductContext);
+function Wishlist() {
+  const { email, cartData, wishlistData } = useSelectors();
   const [selectedProduct, setSelectedProduct] = useState();
   const { openModal, handleOpenModal, handleCloseModal } = useQuickViewModal();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = "Wishlist - Depot";
+    dispatch(fetchCartData(email));
+    dispatch(fetchWishlistData(email));
     // eslint-disable-next-line
-  }, []);
+  }, [email]);
 
   return (
     <Container className="cart">
-      {loading ? (
+      {wishlistData.loading ? (
         <div className="loading">
           <CircularProgress />
         </div>
-      ) : wishlistData.length === 0 && !loading ? (
+      ) : wishlistData.wishlist.length === 0 && !wishlistData.loading ? (
         <EmptyCart />
       ) : (
         <Row>
@@ -45,7 +51,7 @@ function Wishlist(props) {
               <Col xs={3}></Col>
               <Col xs={2}></Col>
             </Row>
-            {wishlistData.map((product, id) => {
+            {wishlistData.wishlist.map((product, id) => {
               return (
                 <Row key={id} className="cart-list">
                   <Col xs={2}>
@@ -69,18 +75,22 @@ function Wishlist(props) {
                     </button>
                   </Col>
                   <Col>
-                    {cartData.find((item) => item.id === product.id) ? (
-                      <Link to="/cart" className="go-to-cart">
+                    {/* if product is available in cart, show go to cart button, otherwise show add to cart button */}
+                    {cartData.cart.find((item) => item.id === product.id) ? (
+                      <button
+                        onClick={() => navigate("/cart")}
+                        className="wishlist-btn"
+                      >
                         Go to Cart
-                      </Link>
+                      </button>
                     ) : (
                       <button
                         onClick={() => {
-                          addToCart(product, email).then(() =>
-                            getCartData(setCartData, email)
+                          dispatch(addProductToCart({ product, email })).then(
+                            () => dispatch(fetchCartData(email))
                           );
                         }}
-                        className="add-to-cart"
+                        className="wishlist-btn"
                       >
                         Add to Cart
                       </button>
@@ -90,7 +100,9 @@ function Wishlist(props) {
                     <Tooltip title="Remove from wishlist">
                       <IconButton
                         onClick={() =>
-                          props.removeFromWishlist(email, product.id)
+                          dispatch(
+                            removeProductFromWishlist({ product, email })
+                          ).then(() => dispatch(fetchWishlistData(email)))
                         }
                         sx={{ color: "#F15C6D" }}
                       >

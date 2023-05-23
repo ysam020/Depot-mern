@@ -1,12 +1,15 @@
-import React, { useContext } from "react";
+import React from "react";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 import { Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { getCartData } from "../../utils/getCartData";
 import Rating from "@mui/material/Rating";
-import { ProductContext } from "../../contexts/Context";
+import useSelectors from "../../customHooks/useSelectors";
+import { useDispatch } from "react-redux";
+import {
+  addProductToCart,
+  fetchCartData,
+} from "../../redux/features/cart/cart";
 
 const style = {
   position: "absolute",
@@ -19,9 +22,10 @@ const style = {
 };
 
 export default function QuickViewModal(props) {
-  const email = useSelector((state) => state.userReducer.email);
-
-  const context = useContext(ProductContext);
+  console.log(props.selectedProduct);
+  const { email, cartData } = useSelectors();
+  const dispatch = useDispatch();
+  const product = props.selectedProduct;
 
   return (
     <div>
@@ -61,7 +65,8 @@ export default function QuickViewModal(props) {
                   {props.selectedProduct.shortDescription}
                 </p>
 
-                {context.cartData.find(
+                {/* if cart already has the product, show go to cart button, otherwise show add to cart button */}
+                {cartData.cart.find(
                   (item) => item.id === props.selectedProduct.id
                 ) ? (
                   <Link to="/cart" className="go-to-cart">
@@ -70,9 +75,9 @@ export default function QuickViewModal(props) {
                 ) : (
                   <button
                     onClick={() => {
-                      context
-                        .addToCart(props.selectedProduct, email)
-                        .then(() => getCartData(context.setCartData, email));
+                      dispatch(addProductToCart({ product, email })).then(() =>
+                        dispatch(fetchCartData(email))
+                      );
                     }}
                     className="add-to-cart"
                   >

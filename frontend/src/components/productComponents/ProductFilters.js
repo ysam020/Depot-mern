@@ -15,6 +15,7 @@ function ProductFilters(props) {
       <select
         name="productSort"
         id="productSort"
+        value={props.sortCategory}
         onChange={(e) => props.setSortCategory(e.target.value)}
       >
         <option value="">Sort by</option>

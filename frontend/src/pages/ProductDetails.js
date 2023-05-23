@@ -1,34 +1,38 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect } from "react";
 import "../styles/product-details.css";
 import { Container, Row, Col } from "react-bootstrap";
 import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
-import { getCartData } from "../utils/getCartData";
-import { ProductContext } from "../contexts/Context";
 import ProductAdditionalInfo from "../components/productComponents/ProductAdditionalInfo";
-import useProductDetails from "../customHooks/productDetails";
+import useSelectors from "../customHooks/useSelectors";
+import { useDispatch } from "react-redux";
+import { fetchProductDetails } from "../redux/features/productDetails/productDetails";
+import { addProductToCart, fetchCartData } from "../redux/features/cart/cart";
 
 function ProductDetails() {
   const params = useParams();
   const productId = params.productId;
-  const { data, loading } = useProductDetails(productId);
-
-  const email = useSelector((state) => state.users.email);
-
-  const context = useContext(ProductContext);
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    if (data) {
-      document.title = `${data.title} - Depot`;
+    dispatch(fetchProductDetails(productId));
+    // eslint-disable-next-line
+  }, []);
+
+  const { email, productDetails, cartData } = useSelectors();
+  const product = productDetails.product;
+
+  useEffect(() => {
+    if (productDetails.product) {
+      document.title = `${productDetails.product.title} - Depot`;
     }
-  }, [data]);
+  }, [productDetails.product]);
 
   return (
     <>
       <Container className="product-details-page">
-        {loading ? (
+        {productDetails.loading ? (
           <div
             className="loading"
             style={{
@@ -42,31 +46,33 @@ function ProductDetails() {
         ) : (
           <Row>
             <Col xs={12} lg={6} className="product-details-left-col">
-              <img src={data?.image} alt="" width="100%" />
+              <img src={productDetails.product?.image} alt="" width="100%" />
             </Col>
             <Col xs={12} lg={6} className="product-details-right-col">
-              <h2>{data?.title}</h2>
-              <h5>{`$ ${data?.price.toFixed(2)}`}</h5>
+              <h2>{productDetails.product?.title}</h2>
+              <h5>{`$ ${productDetails.product.price?.toFixed(2)}`}</h5>
 
-              <p className="product-short-description">{data?.description}</p>
+              <p className="product-short-description">
+                {productDetails.product?.description}
+              </p>
 
               <p className="product-info">
                 <span className="product-info-heading">CATEGORY:&nbsp;</span>
-                {data?.category.toUpperCase()}
+                {productDetails.product.category?.toUpperCase()}
               </p>
 
               <br />
 
-              {context.cartData.find((product) => product.id === data.id) ? (
+              {cartData.cart.find(
+                (product) => product.id === productDetails.product.id
+              ) ? (
                 <Link to="/cart" className="go-to-cart">
                   Go to Cart
                 </Link>
               ) : (
                 <button
                   onClick={() => {
-                    context
-                      .addToCart(data, email)
-                      .then(() => getCartData(context.setCartData, email));
+                    dispatch(addProductToCart({ product, email }));
                   }}
                   className="add-to-cart"
                 >
@@ -78,7 +84,7 @@ function ProductDetails() {
         )}
       </Container>
 
-      <ProductAdditionalInfo data={data} />
+      <ProductAdditionalInfo data={productDetails.product} />
     </>
   );
 }

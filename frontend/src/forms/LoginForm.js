@@ -3,10 +3,12 @@ import { Button } from "@mui/material";
 import { useFormik } from "formik";
 import { TextField } from "@mui/material";
 import { validationSchema } from "../schema/LoginSchema";
-import useLogin from "../customHooks/login";
+import { useDispatch } from "react-redux";
+import { login } from "../redux/features/users/users";
 
 const LoginForm = (props) => {
-  const login = useLogin();
+  // const login = useLogin();
+  const dispatch = useDispatch();
 
   const formik = useFormik({
     initialValues: {
@@ -16,7 +18,9 @@ const LoginForm = (props) => {
 
     validationSchema: validationSchema,
     onSubmit: async (values) => {
-      login(values, props.handleCloseModal);
+      dispatch(login(values)).then(() => {
+        props.handleCloseModal();
+      });
     },
   });
 

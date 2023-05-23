@@ -5,11 +5,13 @@ import { TextField } from "@mui/material";
 import states from "../assets/data/States";
 import MenuItem from "@mui/material/MenuItem";
 import { validationSchema } from "../schema/BillingSchema";
-import { useSelector } from "react-redux";
-import { saveAddress } from "../utils/saveAddress";
+import useSelectors from "../customHooks/useSelectors";
+import { useDispatch } from "react-redux";
+import { addAddress, fetchAddress } from "../redux/features/address/address";
 
 function BillingForm(props) {
-  const email = useSelector((state) => state.userReducer.email);
+  const { email } = useSelectors();
+  const dispatch = useDispatch();
 
   const formik = useFormik({
     initialValues: {
@@ -23,13 +25,12 @@ function BillingForm(props) {
     },
 
     validationSchema: validationSchema,
-    onSubmit: (values) => {
-      saveAddress(
-        values,
-        email,
-        props.setPersonalDetails,
-        props.setBillingFormSubmitted
-      );
+    onSubmit: async (address) => {
+      dispatch(addAddress({ email, address })).then(() => {
+        props.setPersonalDetails(address);
+        props.setBillingFormSubmitted(true);
+        dispatch(fetchAddress(email));
+      });
     },
   });
 

@@ -4,40 +4,50 @@ import "../styles/checkout.css";
 import { Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { cardNumberField } from "../utils/CardNumberField";
-import { getSavedAddress } from "../utils/getSavedAddress";
 import Radio from "@mui/material/Radio";
 import CheckoutCard from "../components/checkoutComponents/CheckoutCard";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
-import { deleteAddress } from "../utils/deleteAddress";
 import CheckoutSummary from "../components/checkoutComponents/CheckoutSummary";
-import useCartData from "../customHooks/useCartData";
-import useSavedAddressHook from "../customHooks/useSavedAddress";
+import useSelectors from "../customHooks/useSelectors";
+import { deleteAddress, fetchAddress } from "../redux/features/address/address";
+import { useDispatch } from "react-redux";
 
 function Checkout() {
   const navigate = useNavigate();
   const [personalDetails, setPersonalDetails] = useState();
   const [billingFormSubmitted, setBillingFormSubmitted] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
+  const { cartData, email, savedAddress } = useSelectors();
+  const [useSavedAddress, setUseSavedAddress] = useState(
+    savedAddress.address.length > 0 ? true : false
+  );
 
-  const { cartData, email, loading } = useCartData();
-  const { savedAddress, setSavedAddress, useSavedAddress, setUseSavedAddress } =
-    useSavedAddressHook();
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    if (!loading) {
-      if (cartData.length === 0) {
-        navigate("/");
-      }
-    }
-    document.title = "Checkout - Depot";
+    dispatch(fetchAddress(email));
     // eslint-disable-next-line
-  }, [loading]);
+  }, [email]);
+
+  useEffect(() => {
+    if (savedAddress.address.length === 0) {
+      setUseSavedAddress(false);
+    }
+  }, [savedAddress.address]);
+
+  useEffect(() => {
+    if (!cartData.loading && cartData.cart.length === 0) {
+      navigate("/"); // if cart is empty, navigate to homepage
+    }
+    // eslint-disable-next-line
+  }, [cartData.loading]);
 
   useEffect(() => {
     cardNumberField();
+    document.title = "Checkout - Depot";
   }, []);
 
   const handleAddressChange = (item) => {
@@ -50,13 +60,14 @@ function Checkout() {
       <Container className="checkout-form">
         <Row>
           <Col xs={12} md={6}>
-            {loading ? (
+            {savedAddress.loading ? (
               <div className="loading">
                 <CircularProgress />
               </div>
             ) : (
               <div>
-                {!useSavedAddress && (
+                {/* If not using a saved address and a saved address is available, ask user to use one */}
+                {savedAddress.address.length > 0 && (
                   <div
                     style={{
                       display: "flex",
@@ -77,9 +88,10 @@ function Checkout() {
                   </div>
                 )}
 
-                {useSavedAddress && (
+                {/* If using a saved address and a saved address is available, show the saved addresses */}
+                {useSavedAddress && savedAddress.address.length > 0 && (
                   <Row className="saved-address">
-                    {savedAddress.map((item, id) => {
+                    {savedAddress.address.map((address, id) => {
                       return (
                         <Col lg={6} key={id} className="saved-address-col">
                           <div className="address">
@@ -88,35 +100,35 @@ function Checkout() {
                               disableRipple
                               checked={
                                 JSON.stringify(selectedAddress) ===
-                                JSON.stringify(item)
+                                JSON.stringify(address)
                               }
                               onChange={() => {
-                                handleAddressChange(item);
+                                handleAddressChange(address);
                                 setBillingFormSubmitted(true);
                               }}
                               name="address"
                             />
                             <div style={{ flex: 1 }}>
                               <p>
-                                {item.name}
+                                {address.name}
                                 <br />
-                                {item.addressLine1}
+                                {address.addressLine1}
                                 <br />
-                                {item.addressLine2}
+                                {address.addressLine2}
                                 <br />
-                                {item.town}
+                                {address.town}
                                 <br />
-                                {item.zip}
+                                {address.zip}
                                 <br />
-                                {item.state}
+                                {address.state}
                               </p>
                             </div>
                             <Tooltip title="Delete Address">
                               <IconButton
                                 onClick={() =>
-                                  deleteAddress(email, item).then(() =>
-                                    getSavedAddress(setSavedAddress, email)
-                                  )
+                                  dispatch(
+                                    deleteAddress({ email, address })
+                                  ).then(() => dispatch(fetchAddress(email)))
                                 }
                                 disableRipple
                                 sx={{ alignItems: "flex-start" }}
@@ -150,6 +162,8 @@ function Checkout() {
                     )}
                   </Row>
                 )}
+
+                {/* If not using a saved address, show the form */}
                 {!useSavedAddress && (
                   <BillingForm
                     setBillingFormSubmitted={setBillingFormSubmitted}
@@ -177,7 +191,7 @@ function Checkout() {
         </Row>
       </Container>
 
-      <CheckoutSummary cartData={cartData} />
+      <CheckoutSummary />
     </div>
   );
 }

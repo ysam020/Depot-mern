@@ -1,22 +1,34 @@
-import React, { useContext } from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import Tooltip from "@mui/material/Tooltip";
 import Rating from "@mui/material/Rating";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { IconButton } from "@mui/material";
 import { Row, Col } from "react-bootstrap";
-import { useSelector } from "react-redux";
-import { getCartData } from "../../utils/getCartData";
-import { getWishlistData } from "../../utils/getWishlistData";
 import ReactPaginate from "react-paginate";
-import { ProductContext } from "../../contexts/Context";
 import usePagination from "../../customHooks/pagination";
+import useSelectors from "../../customHooks/useSelectors";
+import {
+  addProductToCart,
+  fetchCartData,
+} from "../../redux/features/cart/cart";
+import {
+  addProductToWishlist,
+  fetchWishlistData,
+} from "../../redux/features/wishlist/wishlist";
+import { useDispatch } from "react-redux";
 
 function Pagination(props) {
-  const context = useContext(ProductContext);
-  const email = useSelector((state) => state.users.email);
+  const dispatch = useDispatch();
+  const { email, cartData, wishlistData, productsData } = useSelectors();
   const { productsPerPage, pageCount, pagesVisited, changePage } =
-    usePagination(props.data);
+    usePagination(productsData.products);
+
+  useEffect(() => {
+    dispatch(fetchCartData(email));
+    dispatch(fetchWishlistData(email));
+    // eslint-disable-next-line
+  }, [email]);
 
   function isProductWishlisted(wishlistData, productId) {
     return wishlistData.some((product) => product.id === productId);
@@ -29,10 +41,10 @@ function Pagination(props) {
   return (
     <>
       <Row>
-        {props.data
+        {productsData.products
           ?.slice(pagesVisited, pagesVisited + productsPerPage)
-          .map((products) => {
-            const { id, title, price, image, rating } = products;
+          .map((product) => {
+            const { id, title, price, image, rating } = product;
 
             return (
               <Col
@@ -49,27 +61,25 @@ function Pagination(props) {
                       <span>
                         <IconButton
                           disabled={isProductWishlisted(
-                            context.wishlistData,
+                            wishlistData.wishlist,
                             id
-                          )}
+                          )} // disable button if product is already wishlisted
                           onClick={(e) => {
                             e.preventDefault();
-                            context
-                              .addToWishlist(products, email)
-                              .then(() =>
-                                getWishlistData(context.setWishlistData, email)
-                              );
+                            dispatch(
+                              addProductToWishlist({ product, email })
+                            ).then(() => dispatch(fetchWishlistData(email)));
                           }}
                         >
                           <FavoriteIcon
                             sx={
-                              isProductWishlisted(context.wishlistData, id)
+                              isProductWishlisted(wishlistData.wishlist, id)
                                 ? {
                                     color: "#F15C6D !important",
                                     width: "20px !important",
                                     height: "20px !important",
                                   }
-                                : {}
+                                : {} // if product is wishlisted, show red icon
                             }
                           />
                         </IconButton>
@@ -89,18 +99,17 @@ function Pagination(props) {
                     readOnly
                     className="product-rating"
                   />
-                  {context.cartData.find(
-                    (product) => product.id === products.id
-                  ) ? (
+                  {/* if cart already has the product, show go to cart button, otherwise show add to cart button */}
+                  {cartData.cart.find((item) => item.id === product.id) ? (
                     <Link to="/cart" className="go-to-cart">
                       Go to Cart
                     </Link>
                   ) : (
                     <button
                       onClick={() => {
-                        context
-                          .addToCart(products, email)
-                          .then(() => getCartData(context.setCartData, email));
+                        dispatch(addProductToCart({ product, email })).then(
+                          () => dispatch(fetchCartData(email))
+                        );
                         handleOpenSnackbar();
                       }}
                       className="add-to-cart"
@@ -113,7 +122,7 @@ function Pagination(props) {
             );
           })}
       </Row>
-      ;
+
       <ReactPaginate
         previousLabel={"Prev"}
         nextLabel={"Next"}

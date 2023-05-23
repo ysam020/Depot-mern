@@ -12,22 +12,17 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import Badge from "@mui/material/Badge";
 import { Link } from "react-router-dom";
 import Login from "./Login";
-import { useSelector } from "react-redux";
-import useCartData from "../customHooks/useCartData";
-import useWishlistData from "../customHooks/useWishlistData";
 import useNavbarSettings from "../customHooks/navbarSettings";
 import useLoginModal from "../customHooks/loginModal";
 import useNavbarMenu from "../customHooks/navbarMenu";
+import useSelectors from "../customHooks/useSelectors";
 
-export default function Navbar(props) {
-  const { name, email } = useSelector((state) => state.users);
+export default function Navbar() {
+  const { name, email, cartData, wishlistData } = useSelectors();
   const settings = useNavbarSettings();
   const { openModal, handleOpenModal, handleCloseModal } = useLoginModal();
   const { anchorElUser, handleOpenUserMenu, handleCloseUserMenu } =
     useNavbarMenu();
-
-  useCartData();
-  useWishlistData();
 
   return (
     <>
@@ -78,7 +73,7 @@ export default function Navbar(props) {
             >
               <Link to="/wishlist" className="navbar-link">
                 <Badge
-                  badgeContent={props.wishlistQty}
+                  badgeContent={wishlistData.wishlist.length}
                   showZero
                   color="primary"
                 >
@@ -99,7 +94,11 @@ export default function Navbar(props) {
               disableRipple
             >
               <Link to="/cart" className="navbar-link">
-                <Badge badgeContent={props.cartQty} showZero color="primary">
+                <Badge
+                  badgeContent={cartData.cart.length}
+                  showZero
+                  color="primary"
+                >
                   <LocalMallIcon
                     sx={{
                       color: "#000",

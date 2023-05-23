@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import IconButton from "@mui/material/IconButton";
@@ -6,31 +6,39 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EmptyCart from "../components/EmptyCart";
 import Tooltip from "@mui/material/Tooltip";
 import CircularProgress from "@mui/material/CircularProgress";
-import useCartData from "../customHooks/useCartData";
-import { ProductContext } from "../contexts/Context";
-import { updateCart } from "../utils/updateCart";
+import useSelectors from "../customHooks/useSelectors";
+import {
+  fetchCartData,
+  removeProductFromCart,
+  updateCart,
+} from "../redux/features/cart/cart";
+import { useDispatch } from "react-redux";
 
-function Cart(props) {
-  const { cartData, setCartData } = useContext(ProductContext);
-  const { email, loading } = useCartData();
+function Cart() {
+  const { cartData, email } = useSelectors();
+  const dispatch = useDispatch();
 
   useEffect(() => {
+    dispatch(fetchCartData(email));
     document.title = "Cart - Depot";
-  }, []);
+    // eslint-disable-next-line
+  }, [email]);
 
-  const total_price = cartData.reduce((accumeletor, item) => {
-    return accumeletor + item.price * item.qty;
+  console.log(cartData.cart);
+
+  const total_price = cartData.cart.reduce((accumeletor, item) => {
+    return accumeletor + item.price * item.qty; // get total cost of products in cart
   }, 0);
 
   return (
     <Container className="cart">
-      {loading ? (
+      {cartData.cart.length === 0 && cartData.loading ? ( // if loading and cart is empty
         <div className="loading">
           <CircularProgress />
         </div>
-      ) : cartData.length === 0 && !loading ? (
+      ) : cartData.cart.length === 0 && !cartData.loading ? ( // if not loading and cart is not empty
         <EmptyCart />
-      ) : (
+      ) : cartData.cart.length !== 0 && !cartData.loading ? ( // if not loading and cart is not empty
         <Row>
           <Col xs={12} lg={7}>
             <Row className="cart-list">
@@ -45,7 +53,7 @@ function Cart(props) {
               </Col>
               <Col xs={2}></Col>
             </Row>
-            {cartData.map((product, id) => {
+            {cartData.cart.map((product, id) => {
               return (
                 <Row key={id} className="cart-list">
                   <Col xs={1}>
@@ -61,15 +69,16 @@ function Cart(props) {
                     <select
                       name=""
                       id=""
-                      onChange={(e) =>
-                        updateCart(
-                          email,
-                          product.id,
-                          e.target.value,
-                          cartData,
-                          setCartData
-                        )
-                      }
+                      value={product.qty}
+                      onChange={(e) => {
+                        dispatch(
+                          updateCart({
+                            email,
+                            product,
+                            qty: parseInt(e.target.value),
+                          })
+                        );
+                      }}
                     >
                       <option value="1">1</option>
                       <option value="2">2</option>
@@ -81,7 +90,11 @@ function Cart(props) {
                   <Col xs={2}>
                     <Tooltip title="Remove from cart">
                       <IconButton
-                        onClick={() => props.removeFromCart(email, product.id)}
+                        onClick={() => {
+                          dispatch(
+                            removeProductFromCart({ product, email })
+                          ).then(() => dispatch(fetchCartData(email)));
+                        }}
                         sx={{ color: "#F15C6D" }}
                       >
                         <DeleteIcon />
@@ -103,6 +116,8 @@ function Cart(props) {
             </div>
           </Col>
         </Row>
+      ) : (
+        ""
       )}
     </Container>
   );
