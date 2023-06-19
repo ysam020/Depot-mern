@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon index.mjs",
+    "start":"nodemon index.mjs",
     "build": "npm i"
   },
   "dependencies": {
