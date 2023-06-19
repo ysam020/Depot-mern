@@ -24,7 +24,7 @@ app.use(express.urlencoded());
 app.use(cors());
 
 mongoose
-  .connect(process.env.MONGODB_URI, {
+  .connect("mongodb+srv://ysam020:ysam24369@depot.swnzl1q.mongodb.net/depot?retryWrites=true&w=majority", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
