@@ -25,7 +25,7 @@ message UpdateCartRequest {
 }
 
 message UpdateCartResponse {
-  Cart cart = 1;
+  repeated Cart carts = 1;
 }
 
 message DeleteCartRequest {

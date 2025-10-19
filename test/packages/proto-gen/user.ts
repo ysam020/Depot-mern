@@ -21,7 +21,7 @@ import {
 
 export const protobufPackage = "users";
 
-/** Product model */
+/** User model */
 export interface User {
   id: number;
   name: string;
@@ -29,29 +29,42 @@ export interface User {
   password: string;
 }
 
-/** Request to get a product by ID */
+/** Request to signup */
 export interface SignupRequest {
   name: string;
   email: string;
   password: string;
 }
 
-/** Response containing a product */
+/** Response containing a user */
 export interface SignupResponse {
   user: User | undefined;
 }
 
-/** Request to create a new product */
+/** Request to signin */
 export interface SigninRequest {
   email: string;
   password: string;
 }
 
-/** Response after creating a product */
+/** Response after signin with tokens */
 export interface SigninResponse {
   user: User | undefined;
   accessToken: string;
   refreshToken: string;
+}
+
+/** Request to refresh token */
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+/** Response with new tokens */
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  success: boolean;
+  message: string;
 }
 
 function createBaseUser(): User {
@@ -480,7 +493,173 @@ export const SigninResponse: MessageFns<SigninResponse> = {
   },
 };
 
-/** Product Service definition */
+function createBaseRefreshTokenRequest(): RefreshTokenRequest {
+  return { refreshToken: "" };
+}
+
+export const RefreshTokenRequest: MessageFns<RefreshTokenRequest> = {
+  encode(message: RefreshTokenRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.refreshToken !== "") {
+      writer.uint32(10).string(message.refreshToken);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RefreshTokenRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRefreshTokenRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.refreshToken = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RefreshTokenRequest {
+    return { refreshToken: isSet(object.refreshToken) ? globalThis.String(object.refreshToken) : "" };
+  },
+
+  toJSON(message: RefreshTokenRequest): unknown {
+    const obj: any = {};
+    if (message.refreshToken !== "") {
+      obj.refreshToken = message.refreshToken;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<RefreshTokenRequest>, I>>(base?: I): RefreshTokenRequest {
+    return RefreshTokenRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<RefreshTokenRequest>, I>>(object: I): RefreshTokenRequest {
+    const message = createBaseRefreshTokenRequest();
+    message.refreshToken = object.refreshToken ?? "";
+    return message;
+  },
+};
+
+function createBaseRefreshTokenResponse(): RefreshTokenResponse {
+  return { accessToken: "", refreshToken: "", success: false, message: "" };
+}
+
+export const RefreshTokenResponse: MessageFns<RefreshTokenResponse> = {
+  encode(message: RefreshTokenResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.accessToken !== "") {
+      writer.uint32(10).string(message.accessToken);
+    }
+    if (message.refreshToken !== "") {
+      writer.uint32(18).string(message.refreshToken);
+    }
+    if (message.success !== false) {
+      writer.uint32(24).bool(message.success);
+    }
+    if (message.message !== "") {
+      writer.uint32(34).string(message.message);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RefreshTokenResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRefreshTokenResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.accessToken = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.refreshToken = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.success = reader.bool();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.message = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RefreshTokenResponse {
+    return {
+      accessToken: isSet(object.accessToken) ? globalThis.String(object.accessToken) : "",
+      refreshToken: isSet(object.refreshToken) ? globalThis.String(object.refreshToken) : "",
+      success: isSet(object.success) ? globalThis.Boolean(object.success) : false,
+      message: isSet(object.message) ? globalThis.String(object.message) : "",
+    };
+  },
+
+  toJSON(message: RefreshTokenResponse): unknown {
+    const obj: any = {};
+    if (message.accessToken !== "") {
+      obj.accessToken = message.accessToken;
+    }
+    if (message.refreshToken !== "") {
+      obj.refreshToken = message.refreshToken;
+    }
+    if (message.success !== false) {
+      obj.success = message.success;
+    }
+    if (message.message !== "") {
+      obj.message = message.message;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<RefreshTokenResponse>, I>>(base?: I): RefreshTokenResponse {
+    return RefreshTokenResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<RefreshTokenResponse>, I>>(object: I): RefreshTokenResponse {
+    const message = createBaseRefreshTokenResponse();
+    message.accessToken = object.accessToken ?? "";
+    message.refreshToken = object.refreshToken ?? "";
+    message.success = object.success ?? false;
+    message.message = object.message ?? "";
+    return message;
+  },
+};
+
+/** Auth Service definition */
 export type AuthServiceService = typeof AuthServiceService;
 export const AuthServiceService = {
   signin: {
@@ -501,11 +680,22 @@ export const AuthServiceService = {
     responseSerialize: (value: SignupResponse): Buffer => Buffer.from(SignupResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): SignupResponse => SignupResponse.decode(value),
   },
+  refreshToken: {
+    path: "/users.AuthService/RefreshToken",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: RefreshTokenRequest): Buffer => Buffer.from(RefreshTokenRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): RefreshTokenRequest => RefreshTokenRequest.decode(value),
+    responseSerialize: (value: RefreshTokenResponse): Buffer =>
+      Buffer.from(RefreshTokenResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): RefreshTokenResponse => RefreshTokenResponse.decode(value),
+  },
 } as const;
 
 export interface AuthServiceServer extends UntypedServiceImplementation {
   signin: handleUnaryCall<SigninRequest, SigninResponse>;
   signup: handleUnaryCall<SignupRequest, SignupResponse>;
+  refreshToken: handleUnaryCall<RefreshTokenRequest, RefreshTokenResponse>;
 }
 
 export interface AuthServiceClient extends Client {
@@ -538,6 +728,21 @@ export interface AuthServiceClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: SignupResponse) => void,
+  ): ClientUnaryCall;
+  refreshToken(
+    request: RefreshTokenRequest,
+    callback: (error: ServiceError | null, response: RefreshTokenResponse) => void,
+  ): ClientUnaryCall;
+  refreshToken(
+    request: RefreshTokenRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: RefreshTokenResponse) => void,
+  ): ClientUnaryCall;
+  refreshToken(
+    request: RefreshTokenRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: RefreshTokenResponse) => void,
   ): ClientUnaryCall;
 }
 

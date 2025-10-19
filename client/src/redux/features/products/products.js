@@ -1,5 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../../../config/axiosConfig";
 
 const initialState = {
@@ -10,34 +9,53 @@ const initialState = {
 
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
-  async ({ filterCategory, sortCategory }) => {
-    const res = await apiClient.get("/products");
-    let data = res.data;
-    // Filter
-    if (filterCategory !== "") {
-      data = data.filter(
-        (product) =>
-          product.category.toLowerCase().trim() ===
-            filterCategory.toLowerCase() ||
-          product.color.toLowerCase() === filterCategory.toLowerCase() ||
-          product.material.toLowerCase() === filterCategory.toLowerCase()
+  async ({ filterCategory, sortCategory }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/products");
+
+      let data = [];
+
+      if (res.data.success && Array.isArray(res.data.data)) {
+        data = res.data.data;
+      } else if (Array.isArray(res.data)) {
+        // Fallback for plain array response
+        data = res.data;
+      }
+
+      // Filter
+      if (filterCategory !== "") {
+        data = data.filter(
+          (product) =>
+            product.category?.toLowerCase().trim() ===
+              filterCategory.toLowerCase() ||
+            product.color?.toLowerCase() === filterCategory.toLowerCase() ||
+            product.material?.toLowerCase() === filterCategory.toLowerCase()
+        );
+      }
+
+      // Sort
+      if (sortCategory === "Sort by Price: Low to high") {
+        data = data.sort((a, b) => (a.price || 0) - (b.price || 0));
+      } else if (sortCategory === "Sort by Price: High to low") {
+        data = data.sort((a, b) => (b.price || 0) - (a.price || 0));
+      } else if (sortCategory === "Sort by Rating") {
+        data = data.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Fetch products error:", error);
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch products"
       );
     }
-    // Sort
-    if (sortCategory === "Sort by Price: Low to high") {
-      data = data.sort((a, b) => a.price - b.price);
-    } else if (sortCategory === "Sort by Price: High to low") {
-      data = data.sort((a, b) => b.price - a.price);
-    } else if (sortCategory === "Sort by Rating") {
-      data = data.sort((a, b) => b.rating - a.rating);
-    }
-    return data;
   }
 );
 
 const productSlice = createSlice({
   name: "products",
   initialState,
+  reducers: {},
   extraReducers: (builder) => {
     builder.addCase(fetchProducts.pending, (state) => {
       state.loading = true;

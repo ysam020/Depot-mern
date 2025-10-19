@@ -31,8 +31,6 @@ function useHandleCardDetails(props) {
       year,
       cvv,
     };
-
-    console.log(orderDetails);
   };
   return {
     handleCardDetails,

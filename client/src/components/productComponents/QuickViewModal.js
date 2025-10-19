@@ -21,7 +21,6 @@ const style = {
 };
 
 export default function QuickViewModal(props) {
-  console.log(props.selectedProduct);
   const { email, cartData } = useSelectors();
   const dispatch = useDispatch();
   const product = props.selectedProduct;

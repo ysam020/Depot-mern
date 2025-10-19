@@ -1,7 +1,10 @@
 import { useSelector } from "react-redux";
 
 function useSelectors() {
-  const { name, email } = useSelector((state) => state.users.user);
+  // Safely get user data with fallback to empty object
+  const user = useSelector((state) => state.users.user) || {};
+  const { name = null, email = null } = user;
+
   const cartData = useSelector((state) => state.cart);
   const wishlistData = useSelector((state) => state.wishlist);
   const productsData = useSelector((state) => state.products);
@@ -11,6 +14,7 @@ function useSelectors() {
   return {
     name,
     email,
+    user,
     cartData,
     wishlistData,
     productsData,

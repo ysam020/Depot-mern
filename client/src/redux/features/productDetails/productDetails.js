@@ -7,7 +7,8 @@ export const fetchProductDetails = createAsyncThunk(
   "/productDetails/fetchProductDetails",
   async (productId) => {
     const res = await apiClient(`/products/${productId}`);
-    const data = res.data;
+    const data = res.data.data;
+    console.log(data);
     return data;
   }
 );

@@ -1,15 +1,18 @@
-import grpc from "@grpc/grpc-js";
-import protoLoader from "@grpc/proto-loader";
-import path from "path";
-import { fileURLToPath } from "url";
+import { loadProto } from "./loadProto.js";
+import {
+  signToken,
+  verifyToken,
+  getUserFromMetadata,
+  getUserIdFromMetadata,
+} from "./jwt.js";
+import { successResponse, errorResponse } from "./response.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-export const loadProto = (serviceName) => {
-  const protoPath = path.resolve(
-    __dirname,
-    `../proto-defs/${serviceName}.proto`
-  );
-  const packageDef = protoLoader.loadSync(protoPath);
-  return grpc.loadPackageDefinition(packageDef);
+export {
+  loadProto,
+  getUserFromMetadata,
+  getUserIdFromMetadata,
+  signToken,
+  verifyToken,
+  successResponse,
+  errorResponse,
 };

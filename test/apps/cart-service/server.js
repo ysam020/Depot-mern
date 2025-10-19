@@ -1,5 +1,6 @@
 import grpc from "@grpc/grpc-js";
 import prisma from "@depot/prisma";
+import { getUserIdFromMetadata } from "@depot/grpc-utils";
 import {
   CartServiceService,
   AddToCartResponse,
@@ -8,25 +9,17 @@ import {
   GetCartResponse,
   Cart as CartMessage,
 } from "../../dist/cart.js";
-import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
-
-// Helper to extract user ID from JWT metadata
-const getUserIdFromMetadata = (metadata) => {
-  const authHeader = metadata.get("authorization")[0]?.toString();
-  if (!authHeader) throw new Error("Authorization header missing");
-  const token = authHeader.replace("Bearer ", "");
-  const payload = jwt.verify(token, JWT_SECRET);
-  return payload.id;
-};
 
 // Helper to convert Prisma cart item to gRPC Cart message
 const mapCartItem = (cartItem) => {
   return CartMessage.fromPartial({
     id: cartItem.product.id,
     title: cartItem.product.title,
-    price: Math.floor(cartItem.product.price), // if proto uses int32
+    price: Math.floor(cartItem.product.price),
     image: cartItem.product.image,
     quantity: cartItem.quantity,
   });
@@ -35,18 +28,18 @@ const mapCartItem = (cartItem) => {
 const cartServiceImpl = {
   addToCart: async (call, callback) => {
     try {
-      const userId = getUserIdFromMetadata(call.metadata);
+      // ✅ Use the shared utility
+      const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
       const { id: productId, quantity = 1 } = call.request;
 
-      // Find or create user's cart
       let cart = await prisma.carts.findUnique({
         where: { user_id: userId },
       });
+
       if (!cart) {
         cart = await prisma.carts.create({ data: { user_id: userId } });
       }
 
-      // Check if product exists in cart
       const existingItem = await prisma.cart_items.findFirst({
         where: { cart_id: cart.id, product_id: productId },
       });
@@ -80,7 +73,8 @@ const cartServiceImpl = {
 
   updateCart: async (call, callback) => {
     try {
-      const userId = getUserIdFromMetadata(call.metadata);
+      // ✅ Use the shared utility
+      const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
       const { id: productId, quantity } = call.request;
 
       const cart = await prisma.carts.findUnique({
@@ -88,21 +82,33 @@ const cartServiceImpl = {
       });
       if (!cart) throw new Error("Cart not found");
 
-      const cartItem = await prisma.cart_items.updateMany({
+      await prisma.cart_items.updateMany({
         where: { cart_id: cart.id, product_id: productId },
         data: { quantity },
       });
 
-      // Fetch updated item with product
-      const updatedItem = await prisma.cart_items.findFirst({
+      await prisma.cart_items.findFirst({
         where: { cart_id: cart.id, product_id: productId },
         include: { product: true },
       });
 
-      callback(
-        null,
-        UpdateCartResponse.fromPartial({ cart: mapCartItem(updatedItem) })
-      );
+      const updatedCart = await prisma.carts.findUnique({
+        where: { user_id: userId },
+        include: { cart_items: { include: { product: true } } },
+      });
+
+      const carts =
+        updatedCart?.cart_items.map((item) =>
+          CartMessage.fromPartial({
+            id: item.product.id,
+            title: item.product.title,
+            price: Math.floor(item.product.price),
+            image: item.product.image,
+            quantity: item.quantity,
+          })
+        ) || [];
+
+      callback(null, UpdateCartResponse.fromPartial({ carts }));
     } catch (err) {
       callback({ code: grpc.status.INTERNAL, message: err.message });
     }
@@ -110,7 +116,8 @@ const cartServiceImpl = {
 
   deleteCart: async (call, callback) => {
     try {
-      const userId = getUserIdFromMetadata(call.metadata);
+      // ✅ Use the shared utility
+      const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
       const { id: productId } = call.request;
 
       const cart = await prisma.carts.findUnique({
@@ -130,7 +137,8 @@ const cartServiceImpl = {
 
   getCart: async (call, callback) => {
     try {
-      const userId = getUserIdFromMetadata(call.metadata); // decode JWT here
+      // ✅ Use the shared utility
+      const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
 
       if (!userId) {
         return callback({
@@ -149,7 +157,7 @@ const cartServiceImpl = {
           CartMessage.fromPartial({
             id: item.product.id,
             title: item.product.title,
-            price: Math.floor(item.product.price), // int32
+            price: Math.floor(item.product.price),
             image: item.product.image,
             quantity: item.quantity,
           })

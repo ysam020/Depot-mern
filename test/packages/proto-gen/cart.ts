@@ -44,7 +44,7 @@ export interface UpdateCartRequest {
 }
 
 export interface UpdateCartResponse {
-  cart: Cart | undefined;
+  carts: Cart[];
 }
 
 export interface DeleteCartRequest {
@@ -397,13 +397,13 @@ export const UpdateCartRequest: MessageFns<UpdateCartRequest> = {
 };
 
 function createBaseUpdateCartResponse(): UpdateCartResponse {
-  return { cart: undefined };
+  return { carts: [] };
 }
 
 export const UpdateCartResponse: MessageFns<UpdateCartResponse> = {
   encode(message: UpdateCartResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.cart !== undefined) {
-      Cart.encode(message.cart, writer.uint32(10).fork()).join();
+    for (const v of message.carts) {
+      Cart.encode(v!, writer.uint32(10).fork()).join();
     }
     return writer;
   },
@@ -420,7 +420,7 @@ export const UpdateCartResponse: MessageFns<UpdateCartResponse> = {
             break;
           }
 
-          message.cart = Cart.decode(reader, reader.uint32());
+          message.carts.push(Cart.decode(reader, reader.uint32()));
           continue;
         }
       }
@@ -433,13 +433,13 @@ export const UpdateCartResponse: MessageFns<UpdateCartResponse> = {
   },
 
   fromJSON(object: any): UpdateCartResponse {
-    return { cart: isSet(object.cart) ? Cart.fromJSON(object.cart) : undefined };
+    return { carts: globalThis.Array.isArray(object?.carts) ? object.carts.map((e: any) => Cart.fromJSON(e)) : [] };
   },
 
   toJSON(message: UpdateCartResponse): unknown {
     const obj: any = {};
-    if (message.cart !== undefined) {
-      obj.cart = Cart.toJSON(message.cart);
+    if (message.carts?.length) {
+      obj.carts = message.carts.map((e) => Cart.toJSON(e));
     }
     return obj;
   },
@@ -449,7 +449,7 @@ export const UpdateCartResponse: MessageFns<UpdateCartResponse> = {
   },
   fromPartial<I extends Exact<DeepPartial<UpdateCartResponse>, I>>(object: I): UpdateCartResponse {
     const message = createBaseUpdateCartResponse();
-    message.cart = (object.cart !== undefined && object.cart !== null) ? Cart.fromPartial(object.cart) : undefined;
+    message.carts = object.carts?.map((e) => Cart.fromPartial(e)) || [];
     return message;
   },
 };
