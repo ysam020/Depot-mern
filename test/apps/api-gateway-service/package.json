@@ -8,6 +8,7 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.14.0",
     "@grpc/proto-loader": "^0.7.15",
+    "cors": "^2.8.5",
     "express": "^4.21.2"
   }
 }

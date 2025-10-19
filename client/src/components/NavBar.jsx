@@ -73,7 +73,7 @@ export default function Navbar() {
             >
               <Link to="/wishlist" className="navbar-link">
                 <Badge
-                  badgeContent={wishlistData.wishlist.length}
+                  badgeContent={wishlistData.wishlist?.length}
                   showZero
                   color="primary"
                 >
@@ -95,7 +95,7 @@ export default function Navbar() {
             >
               <Link to="/cart" className="navbar-link">
                 <Badge
-                  badgeContent={cartData.cart.length}
+                  badgeContent={cartData.cart?.length}
                   showZero
                   color="primary"
                 >

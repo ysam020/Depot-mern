@@ -18,7 +18,7 @@ const getUserIdFromMetadata = (metadata) => {
   if (!authHeader) throw new Error("Authorization header missing");
   const token = authHeader.replace("Bearer ", "");
   const payload = jwt.verify(token, JWT_SECRET);
-  return payload.userId;
+  return payload.id;
 };
 
 // Helper to convert Prisma cart item to gRPC Cart message

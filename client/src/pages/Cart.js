@@ -24,19 +24,19 @@ function Cart() {
     // eslint-disable-next-line
   }, [email]);
 
-  const total_price = cartData.cart.reduce((accumeletor, item) => {
+  const total_price = cartData.cart?.reduce((accumeletor, item) => {
     return accumeletor + item.price * item.quantity; // get total cost of products in cart
   }, 0);
 
   return (
     <Container className="cart">
-      {cartData.cart.length === 0 && cartData.loading ? ( // if loading and cart is empty
+      {cartData.cart?.length === 0 && cartData.loading ? ( // if loading and cart is empty
         <div className="loading">
           <CircularProgress />
         </div>
-      ) : cartData.cart.length === 0 && !cartData.loading ? ( // if not loading and cart is not empty
+      ) : cartData.cart?.length === 0 && !cartData.loading ? ( // if not loading and cart is not empty
         <EmptyCart />
-      ) : cartData.cart.length !== 0 && !cartData.loading ? ( // if not loading and cart is not empty
+      ) : cartData.cart?.length !== 0 && !cartData.loading ? ( // if not loading and cart is not empty
         <Row>
           <Col xs={12} lg={7}>
             <Row className="cart-list">
@@ -51,7 +51,7 @@ function Cart() {
               </Col>
               <Col xs={2}></Col>
             </Row>
-            {cartData.cart.map((product, id) => {
+            {cartData.cart?.map((product, id) => {
               return (
                 <Row key={id} className="cart-list">
                   <Col xs={1}>
@@ -103,7 +103,7 @@ function Cart() {
           <Col>
             <div className="cart-totals">
               <h3>Cart Totals</h3>
-              <p>Total:&nbsp; {`$ ${total_price.toFixed("2")}`}</p>
+              <p>Total:&nbsp; {`$ ${total_price?.toFixed("2")}`}</p>
               <hr />
               <Link to="/checkout">
                 <div className="checkout">Proceed to Checkout</div>

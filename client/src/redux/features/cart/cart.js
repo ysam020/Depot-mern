@@ -10,7 +10,7 @@ const initialState = {
 export const fetchCartData = createAsyncThunk(
   "cart/fetchCartData",
   async () => {
-    const res = await apiClient.get(`http://localhost:9002/cart`);
+    const res = await apiClient.get(`/cart`);
     const data = res.data.products;
     return data;
   }
@@ -22,7 +22,7 @@ export const addProductToCart = createAsyncThunk(
     const { id } = product;
     const quantity = 1;
     try {
-      const response = await apiClient.post(`http://localhost:9002/cart`, {
+      const response = await apiClient.post(`/cart`, {
         id,
         quantity,
       });
@@ -38,9 +38,7 @@ export const removeProductFromCart = createAsyncThunk(
   "cart/removeProductFromCart",
   async ({ product }) => {
     try {
-      const response = await apiClient.delete(
-        `http://localhost:9002/cart/${product.id}`
-      );
+      const response = await apiClient.delete(`/cart/${product.id}`);
       return response.data.products;
     } catch (error) {
       console.error(error);
@@ -52,12 +50,9 @@ export const updateCart = createAsyncThunk(
   "cart/updateCart",
   async ({ product, quantity }) => {
     try {
-      const res = await apiClient.put(
-        `http://localhost:9002/cart/${product.id}`,
-        {
-          quantity,
-        }
-      );
+      const res = await apiClient.put(`/cart/${product.id}`, {
+        quantity,
+      });
       const data = res.data.products;
       return data;
     } catch (error) {

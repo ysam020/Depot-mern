@@ -100,7 +100,7 @@ function Pagination(props) {
                     className="product-rating"
                   />
                   {/* if cart already has the product, show go to cart button, otherwise show add to cart button */}
-                  {cartData.cart.find((item) => item.id === product.id) ? (
+                  {cartData.cart?.find((item) => item.id === product.id) ? (
                     <Link to="/cart" className="go-to-cart">
                       Go to Cart
                     </Link>

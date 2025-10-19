@@ -11,7 +11,7 @@ const initialState = {
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async ({ filterCategory, sortCategory }) => {
-    const res = await apiClient.get("http://localhost:9002/products");
+    const res = await apiClient.get("/products");
     let data = res.data;
     // Filter
     if (filterCategory !== "") {

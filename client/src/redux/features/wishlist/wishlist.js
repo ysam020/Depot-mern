@@ -10,7 +10,7 @@ const initialState = {
 export const fetchWishlistData = createAsyncThunk(
   "wishlist/fetchWishlistData",
   async () => {
-    const res = await apiClient.get(`http://localhost:9002/wishlist`);
+    const res = await apiClient.get(`/wishlist`);
     const data = res.data;
     return data;
   }
@@ -22,7 +22,7 @@ export const addProductToWishlist = createAsyncThunk(
     const { id, price, title, image, rating, shortDescription } = product;
     const quantity = 1;
     try {
-      const response = await apiClient.post(`http://localhost:9002/wishlist`, {
+      const response = await apiClient.post(`/wishlist`, {
         id,
         price,
         title,
@@ -43,9 +43,7 @@ export const removeProductFromWishlist = createAsyncThunk(
   "cart/removeProductFromWishlist",
   async ({ product }) => {
     try {
-      const response = await apiClient.delete(
-        `http://localhost:9002/wishlist/${product.id}`
-      );
+      const response = await apiClient.delete(`/wishlist/${product.id}`);
       return response.data;
     } catch (error) {
       console.error(error);

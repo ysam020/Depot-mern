@@ -1,11 +1,11 @@
-import axios from "axios";
+import apiClient from "../config/axiosConfig";
 import { useNavigate } from "react-router-dom";
 
 function useRegister() {
   const navigate = useNavigate();
 
   async function register(values, handleCloseModal) {
-    await axios.post("http://localhost:9002/register", values).then((res) => {
+    await apiClient.post("/signup", values).then((res) => {
       navigate("/");
       alert(res.data.message);
     });

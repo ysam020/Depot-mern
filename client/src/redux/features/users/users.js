@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import apiClient from "../../../config/axiosConfig";
 
 // Retrieve the user data from local storage
 const userFromStorage = JSON.parse(localStorage.getItem("user"));
@@ -13,7 +14,7 @@ const initialState = {
 
 export const login = createAsyncThunk("login/login", async (values) => {
   try {
-    const res = await axios.post("http://localhost:9002/login", values);
+    const res = await apiClient.post("/signin", values);
     const data = res.data;
 
     if (data.success) {
@@ -43,7 +44,7 @@ export const login = createAsyncThunk("login/login", async (values) => {
 export const register = createAsyncThunk(
   "register/register",
   async (values) => {
-    const res = await axios.post("http://localhost:9002/register", values);
+    const res = await apiClient.post("/signup", values);
     const data = res.data;
     if (data.message === "User Registered Successfull") {
       localStorage.setItem(

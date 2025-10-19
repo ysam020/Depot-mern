@@ -23,7 +23,8 @@ function createMetadata(req) {
 
 // Add to cart
 router.post("/", (req, res) => {
-  const { id, quantity } = req.body;
+  const { id, quantity = 1 } = req.body;
+  console.log(id, quantity);
   cartClient.addToCart(
     { id, quantity },
     createMetadata(req),
@@ -63,10 +64,10 @@ router.delete("/:id", (req, res) => {
 
 // Get all cart items
 router.get("/", (req, res) => {
-  const id = req.user.id;
+  // Don't pass any ID - the cart service will extract userId from JWT metadata
   cartClient.getCart(
-    { id: parseInt(id) },
-    createMetadata(req),
+    {}, // Empty request object since GetCartRequest is empty
+    createMetadata(req), // JWT is passed in metadata
     (err, response) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json(response.carts);

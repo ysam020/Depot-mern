@@ -1,12 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import apiClient from "../../../config/axiosConfig";
 
 const initialState = { loading: false, address: [], error: "" };
 
 export const fetchAddress = createAsyncThunk(
   "/address/fetchAddress",
   async (email) => {
-    const res = await axios.get(`http://localhost:9002/${email}/address`);
+    const res = await apiClient(`/address`);
     const data = res.data;
     return data;
   }
@@ -15,10 +16,7 @@ export const fetchAddress = createAsyncThunk(
 export const addAddress = createAsyncThunk(
   "/address/addAddress",
   async ({ email, address }) => {
-    const res = await axios.post(
-      `http://localhost:9002/${email}/address`,
-      address
-    );
+    const res = await apiClient.post(`/address`, address);
     const data = res.data;
     return data;
   }
@@ -28,7 +26,7 @@ export const deleteAddress = createAsyncThunk(
   "/address/deleteAddress",
   async ({ email, address }) => {
     try {
-      const res = await axios.delete(`http://localhost:9002/${email}/address`, {
+      const res = await apiClient.delete(`/address`, {
         headers: {
           "Content-Type": "application/json",
         },

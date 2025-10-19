@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import apiClient from "../config/axiosConfig";
 
 function useProductDetails(productId) {
   const [data, setData] = useState();
@@ -8,9 +8,7 @@ function useProductDetails(productId) {
   useEffect(() => {
     async function getProductList() {
       try {
-        const response = await axios.get(
-          `http://localhost:9002/products/${productId}`
-        );
+        const response = await apiClient(`/products/${productId}`);
         setData(response.data);
         setLoading(false);
       } catch (error) {
