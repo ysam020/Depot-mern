@@ -1,17 +1,22 @@
 {
   "name": "test",
   "private": true,
+  "type": "module",
   "scripts": {
+    "dev": "turbo dev",
     "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "lint": "turbo run lint"
   },
   "devDependencies": {
+    "@dotenvx/dotenvx": "^1.51.0",
+    "@grpc/grpc-js": "^1.14.0",
+    "grpc-tools": "^1.13.0",
     "prettier": "^3.6.2",
+    "protobufjs": "^7.5.4",
+    "ts-node": "^10.9.2",
+    "ts-proto": "^2.7.7",
     "turbo": "^2.5.8",
-    "typescript": "5.9.2"
+    "typescript": "^5.9.2"
   },
   "engines": {
     "node": ">=18"
@@ -20,5 +25,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "dotenv": "^17.2.3"
+  }
 }

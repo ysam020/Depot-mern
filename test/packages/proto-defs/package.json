@@ -1,0 +1,8 @@
+{
+  "name": "@depot/proto-defs",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "proto:gen": "node ./generate_proto.mjs"
+  }
+}

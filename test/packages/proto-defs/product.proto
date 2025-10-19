@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package products;
+
+import "google/protobuf/timestamp.proto";
+
+// Product model
+message Product {
+  int32 id = 1;
+  string title = 2;
+  double price = 3;
+  string short_description = 4;
+  string description = 5;
+  string category = 6;
+  repeated string tags = 7;
+  string sku = 8;
+  string weight = 9;
+  string dimensions = 10;
+  string color = 11;
+  string material = 12;
+  string image = 13;
+  double rating = 14;
+  int32 qty = 15;
+}
+
+// Request to get a product by ID
+message GetProductRequest {
+  int32 id = 1;
+}
+
+// Response containing a product
+message GetProductResponse {
+  Product product = 1;
+}
+
+// Request to create a new product
+message CreateProductRequest {
+  string title = 1;
+  double price = 2;
+  string short_description = 3;
+  string description = 4;
+  string category = 5;
+  repeated string tags = 6;
+  string sku = 7;
+  string weight = 8;
+  string dimensions = 9;
+  string color = 10;
+  string material = 11;
+  string image = 12;
+  double rating = 13;
+  int32 qty = 14;
+}
+
+// Response after creating a product
+message CreateProductResponse {
+  Product product = 1;
+}
+
+// Request to list products
+message ListProductsRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+}
+
+// Response containing multiple products
+message ListProductsResponse {
+  repeated Product products = 1;
+}
+
+// Product Service definition
+service ProductService {
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+}

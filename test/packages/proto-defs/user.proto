@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package users;
+
+import "google/protobuf/timestamp.proto";
+
+// Product model
+message User {
+  int32 id = 1;
+  string name = 2;
+  string email = 3;
+  string password = 4;
+}
+
+// Request to get a product by ID
+message SignupRequest {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+}
+
+// Response containing a product
+message SignupResponse {
+  User user = 1;
+}
+
+// Request to create a new product
+message SigninRequest {
+  string email = 1;
+  string password = 2;
+}
+
+// Response after creating a product
+message SigninResponse {
+  User user = 1;
+  string accessToken = 2;
+  string refreshToken = 3;
+}
+
+// Product Service definition
+service AuthService {
+  rpc Signin(SigninRequest) returns (SigninResponse);
+  rpc Signup(SignupRequest) returns (SignupResponse);
+}
