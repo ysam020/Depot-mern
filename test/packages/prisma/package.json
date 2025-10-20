@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "migrate": "prisma migrate dev --schema=./schema.prisma --dotenv=../../.env",
-    "generate": "prisma generate --schema=./schema.prisma --dotenv=../../.env"
+    "migrate": "dotenvx run -f ../../.env -- prisma migrate dev --schema=./schema.prisma",
+    "generate": "dotenvx run -f ../../.env -- prisma generate --schema=./schema.prisma"
   },
   "keywords": [],
   "author": "",

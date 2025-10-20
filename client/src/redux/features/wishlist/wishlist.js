@@ -11,7 +11,7 @@ export const fetchWishlistData = createAsyncThunk(
   "wishlist/fetchWishlistData",
   async () => {
     const res = await apiClient.get(`/wishlist`);
-    const data = res.data;
+    const data = res.data.data;
     return data;
   }
 );
@@ -19,17 +19,10 @@ export const fetchWishlistData = createAsyncThunk(
 export const addProductToWishlist = createAsyncThunk(
   "wishlist/addProductToWishlist",
   async ({ product }) => {
-    const { id, price, title, image, rating, shortDescription } = product;
-    const quantity = 1;
+    const { id } = product;
     try {
       const response = await apiClient.post(`/wishlist`, {
         id,
-        price,
-        title,
-        image,
-        quantity,
-        rating,
-        shortDescription,
       });
       return response.data;
     } catch (error) {

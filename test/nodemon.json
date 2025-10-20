@@ -1,8 +1,14 @@
 {
-  "watch": ["packages", "apps"],
-  "ext": "js,ts,json",
-  "ignore": ["node_modules"],
-  "execMap": {
-    "ts": "node --loader ts-node/esm"
+  "watch": [
+    "apps/*/server.js",
+    "apps/*/*.js",
+    "apps/*/middlewares/**/*.js",
+    "packages/**/*.js"
+  ],
+  "ext": "js,json",
+  "ignore": ["node_modules/**", "test/**", "dist/**", "build/**"],
+  "delay": "1000",
+  "events": {
+    "start": "clear"
   }
 }

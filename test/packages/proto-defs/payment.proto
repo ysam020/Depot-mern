@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package payments;
+
+// Payment model
+message Payment {
+  string id = 1;
+  int32 order_id = 2;
+  string razorpay_order_id = 3;
+  string razorpay_payment_id = 4;
+  string razorpay_signature = 5;
+  int32 amount = 6;
+  string currency = 7;
+  string status = 8;
+  string payment_method = 9;
+  int32 user_id = 10;
+}
+
+// Request to create a Razorpay order
+message CreateOrderRequest {
+  int32 amount = 1;
+  string currency = 2;
+  string receipt = 3;
+}
+
+// Response containing Razorpay order details
+message CreateOrderResponse {
+  string razorpay_order_id = 1;
+  int32 amount = 2;
+  string currency = 3;
+  string key_id = 4;
+}
+
+// Cart item for order creation
+message CartItem {
+  int32 id = 1;
+  string title = 2;
+  int32 price = 3;
+  string image = 4;
+  int32 quantity = 5;
+}
+
+// Shipping address
+message ShippingAddress {
+  string first_name = 1;
+  string last_name = 2;
+  string address = 3;
+  string city = 4;
+  string state = 5;
+  string pincode = 6;
+  string phone = 7;
+}
+
+// Request to verify payment
+message VerifyPaymentRequest {
+  string razorpay_order_id = 1;
+  string razorpay_payment_id = 2;
+  string razorpay_signature = 3;
+  int32 amount = 4;
+  int32 user_id = 5;
+  repeated CartItem cart_items = 6;
+  ShippingAddress shipping_address = 7;
+}
+
+// Response after payment verification
+message VerifyPaymentResponse {
+  bool success = 1;
+  string message = 2;
+  Payment payment = 3;
+}
+
+// Payment Service definition
+service PaymentService {
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+  rpc VerifyPayment(VerifyPaymentRequest) returns (VerifyPaymentResponse);
+}

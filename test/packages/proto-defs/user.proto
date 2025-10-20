@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package users;
 
-import "google/protobuf/timestamp.proto";
-
 // User model
 message User {
   int32 id = 1;

@@ -44,18 +44,6 @@ model products {
   @@map("products")
 }
 
-model orders {
-  id          Int           @id @default(autoincrement())
-  user_id     Int
-  total       Float
-  status      String        @default("pending")
-  created_at  DateTime      @default(now())
-  user        users         @relation(fields: [user_id], references: [id])
-  order_items order_items[]
-
-  @@map("orders")
-}
-
 model order_items {
   id         Int      @id @default(autoincrement())
   order_id   Int
@@ -100,14 +88,57 @@ model wishlists {
 }
 
 model addresses {
-  id       Int    @id @default(autoincrement())
-  user_id  Int
-  address  String
-  city     String
-  state    String
-  zip_code String
-  country  String
-  user     users  @relation(fields: [user_id], references: [id])
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  name         String // Full name
+  email        String
+  addressLine1 String
+  addressLine2 String? // Optional
+  town         String // City
+  zip          String // Zip/Postal code
+  state        String
+  phone        String? // Optional
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  user         users    @relation(fields: [user_id], references: [id])
 
+  @@index([user_id])
   @@map("addresses")
+}
+
+// Add this to your existing schema.prisma file
+
+model payments {
+  id                  Int      @id @default(autoincrement())
+  order_id            Int?
+  razorpay_order_id   String   @unique
+  razorpay_payment_id String?  @unique
+  razorpay_signature  String?
+  amount              Int
+  currency            String   @default("INR")
+  status              String   @default("pending")
+  payment_method      String?
+  user_id             Int?
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  // Relation to orders
+  order orders? @relation(fields: [order_id], references: [id])
+
+  @@index([razorpay_order_id])
+  @@index([user_id])
+  @@index([order_id])
+}
+
+model orders {
+  id          Int           @id @default(autoincrement())
+  user_id     Int
+  total       Float
+  status      String        @default("pending")
+  created_at  DateTime      @default(now())
+  user        users         @relation(fields: [user_id], references: [id])
+  order_items order_items[]
+  payments    payments[]
+
+  @@map("orders")
 }

@@ -1,42 +1,63 @@
-/**
- * Format a successful response
- * @param {Object|Array} data - Response data
- * @param {string} message - Success message (optional)
- * @returns {Object} Formatted success response
- */
+const removeEmptyFields = (obj) => {
+  if (Array.isArray(obj)) {
+    // Filter out empty items and recursively clean remaining items
+    return obj
+      .map((item) => removeEmptyFields(item))
+      .filter((item) => {
+        if (item === "") return false;
+        if (Array.isArray(item) && item.length === 0) return false;
+        if (
+          typeof item === "object" &&
+          item !== null &&
+          Object.keys(item).length === 0
+        )
+          return false;
+        return true;
+      });
+  }
+
+  if (obj !== null && typeof obj === "object") {
+    const cleaned = {};
+    for (const [key, value] of Object.entries(obj)) {
+      // Skip empty strings, empty arrays, and empty objects
+      if (value === "") continue;
+      if (Array.isArray(value) && value.length === 0) continue;
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        Object.keys(value).length === 0
+      )
+        continue;
+
+      // Recursively clean nested objects/arrays
+      cleaned[key] = removeEmptyFields(value);
+    }
+    return cleaned;
+  }
+
+  return obj;
+};
+
 export const successResponse = (data = {}, message = "Success") => {
   return {
     success: true,
-    data,
+    data: removeEmptyFields(data),
     message,
   };
 };
 
-/**
- * Format an error response
- * @param {string} message - Error message
- * @param {Object|Array} data - Additional error data (optional)
- * @returns {Object} Formatted error response
- */
 export const errorResponse = (message = "An error occurred", data = {}) => {
   return {
     success: false,
-    data,
+    data: removeEmptyFields(data),
     message,
   };
 };
 
-/**
- * Format a response with custom success status
- * @param {boolean} success - Success status
- * @param {Object|Array} data - Response data
- * @param {string} message - Response message
- * @returns {Object} Formatted response
- */
 export const formatResponse = (success, data, message) => {
   return {
     success,
-    data,
+    data: removeEmptyFields(data),
     message,
   };
 };

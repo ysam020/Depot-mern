@@ -2,7 +2,7 @@
   "name": "@depot/order-service",
   "type": "module",
   "scripts": {
-    "dev": "node server.js"
+    "dev": "dotenvx run -f ../../.env -- nodemon server.js"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.10.0",

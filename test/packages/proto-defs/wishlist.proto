@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package wishlists;
+
+message Wishlist {
+  int32 id = 1;
+  string title = 2;
+  int32 price = 3;
+  string image = 4;
+  int32 quantity = 5; 
+}
+
+message AddToWishlistRequest {
+  int32 id = 1;
+}
+
+message AddToWishlistResponse {
+  repeated Wishlist wishlist = 1;
+}
+
+message RemoveFromWishlistRequest {
+  int32 id = 1;
+}
+
+message RemoveFromWishlistResponse {
+  repeated Wishlist wishlist = 1;
+}
+
+message GetWishlistRequest {}
+
+message GetWishlistResponse {
+  repeated Wishlist wishlist = 1; 
+}
+
+service WishlistService {
+  rpc AddToWishlist(AddToWishlistRequest) returns (AddToWishlistResponse);
+  rpc RemoveFromWishlist(RemoveFromWishlistRequest) returns (RemoveFromWishlistResponse);
+  rpc GetWishlist(GetWishlistRequest) returns (GetWishlistResponse);
+}

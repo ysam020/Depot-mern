@@ -117,14 +117,6 @@ exports.Prisma.ProductsScalarFieldEnum = {
   qty: 'qty'
 };
 
-exports.Prisma.OrdersScalarFieldEnum = {
-  id: 'id',
-  user_id: 'user_id',
-  total: 'total',
-  status: 'status',
-  created_at: 'created_at'
-};
-
 exports.Prisma.Order_itemsScalarFieldEnum = {
   id: 'id',
   order_id: 'order_id',
@@ -155,11 +147,39 @@ exports.Prisma.WishlistsScalarFieldEnum = {
 exports.Prisma.AddressesScalarFieldEnum = {
   id: 'id',
   user_id: 'user_id',
-  address: 'address',
-  city: 'city',
+  name: 'name',
+  email: 'email',
+  addressLine1: 'addressLine1',
+  addressLine2: 'addressLine2',
+  town: 'town',
+  zip: 'zip',
   state: 'state',
-  zip_code: 'zip_code',
-  country: 'country'
+  phone: 'phone',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.PaymentsScalarFieldEnum = {
+  id: 'id',
+  order_id: 'order_id',
+  razorpay_order_id: 'razorpay_order_id',
+  razorpay_payment_id: 'razorpay_payment_id',
+  razorpay_signature: 'razorpay_signature',
+  amount: 'amount',
+  currency: 'currency',
+  status: 'status',
+  payment_method: 'payment_method',
+  user_id: 'user_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.OrdersScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  total: 'total',
+  status: 'status',
+  created_at: 'created_at'
 };
 
 exports.Prisma.SortOrder = {
@@ -172,16 +192,22 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
 
 exports.Prisma.ModelName = {
   users: 'users',
   products: 'products',
-  orders: 'orders',
   order_items: 'order_items',
   carts: 'carts',
   cart_items: 'cart_items',
   wishlists: 'wishlists',
-  addresses: 'addresses'
+  addresses: 'addresses',
+  payments: 'payments',
+  orders: 'orders'
 };
 /**
  * Create the Client
@@ -212,8 +238,7 @@ const config = {
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "..",
   "clientVersion": "6.17.1",
@@ -230,13 +255,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../prisma/client\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel users {\n  id        Int         @id @default(autoincrement())\n  name      String      @unique\n  email     String      @unique\n  password  String\n  orders    orders[]\n  cart      carts?\n  wishlists wishlists[]\n  addresses addresses[]\n\n  @@map(\"users\")\n}\n\nmodel products {\n  id                Int           @id @default(autoincrement())\n  title             String\n  price             Float\n  short_description String\n  description       String\n  category          String\n  tags              String[]\n  sku               String        @unique\n  weight            String\n  dimensions        String\n  color             String\n  material          String\n  image             String\n  rating            Float\n  qty               Int\n  order_items       order_items[]\n  cart_items        cart_items[]\n  wishlists         wishlists[]\n\n  @@map(\"products\")\n}\n\nmodel orders {\n  id          Int           @id @default(autoincrement())\n  user_id     Int\n  total       Float\n  status      String        @default(\"pending\")\n  created_at  DateTime      @default(now())\n  user        users         @relation(fields: [user_id], references: [id])\n  order_items order_items[]\n\n  @@map(\"orders\")\n}\n\nmodel order_items {\n  id         Int      @id @default(autoincrement())\n  order_id   Int\n  product_id Int\n  quantity   Int\n  price      Float\n  order      orders   @relation(fields: [order_id], references: [id])\n  product    products @relation(fields: [product_id], references: [id])\n\n  @@map(\"order_items\")\n}\n\nmodel carts {\n  id         Int          @id @default(autoincrement())\n  user_id    Int          @unique\n  created_at DateTime     @default(now())\n  user       users        @relation(fields: [user_id], references: [id])\n  cart_items cart_items[]\n\n  @@map(\"carts\")\n}\n\nmodel cart_items {\n  id         Int      @id @default(autoincrement())\n  cart_id    Int\n  product_id Int\n  quantity   Int\n  cart       carts    @relation(fields: [cart_id], references: [id])\n  product    products @relation(fields: [product_id], references: [id])\n\n  @@map(\"cart_items\")\n}\n\nmodel wishlists {\n  id         Int      @id @default(autoincrement())\n  user_id    Int\n  product_id Int\n  user       users    @relation(fields: [user_id], references: [id])\n  product    products @relation(fields: [product_id], references: [id])\n\n  @@map(\"wishlists\")\n}\n\nmodel addresses {\n  id       Int    @id @default(autoincrement())\n  user_id  Int\n  address  String\n  city     String\n  state    String\n  zip_code String\n  country  String\n  user     users  @relation(fields: [user_id], references: [id])\n\n  @@map(\"addresses\")\n}\n",
-  "inlineSchemaHash": "a61d571b86ba8e4e97ebb602ceab30183c029aceba901e858b258b3f15d499af",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../prisma/client\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel users {\n  id        Int         @id @default(autoincrement())\n  name      String      @unique\n  email     String      @unique\n  password  String\n  orders    orders[]\n  cart      carts?\n  wishlists wishlists[]\n  addresses addresses[]\n\n  @@map(\"users\")\n}\n\nmodel products {\n  id                Int           @id @default(autoincrement())\n  title             String\n  price             Float\n  short_description String\n  description       String\n  category          String\n  tags              String[]\n  sku               String        @unique\n  weight            String\n  dimensions        String\n  color             String\n  material          String\n  image             String\n  rating            Float\n  qty               Int\n  order_items       order_items[]\n  cart_items        cart_items[]\n  wishlists         wishlists[]\n\n  @@map(\"products\")\n}\n\nmodel order_items {\n  id         Int      @id @default(autoincrement())\n  order_id   Int\n  product_id Int\n  quantity   Int\n  price      Float\n  order      orders   @relation(fields: [order_id], references: [id])\n  product    products @relation(fields: [product_id], references: [id])\n\n  @@map(\"order_items\")\n}\n\nmodel carts {\n  id         Int          @id @default(autoincrement())\n  user_id    Int          @unique\n  created_at DateTime     @default(now())\n  user       users        @relation(fields: [user_id], references: [id])\n  cart_items cart_items[]\n\n  @@map(\"carts\")\n}\n\nmodel cart_items {\n  id         Int      @id @default(autoincrement())\n  cart_id    Int\n  product_id Int\n  quantity   Int\n  cart       carts    @relation(fields: [cart_id], references: [id])\n  product    products @relation(fields: [product_id], references: [id])\n\n  @@map(\"cart_items\")\n}\n\nmodel wishlists {\n  id         Int      @id @default(autoincrement())\n  user_id    Int\n  product_id Int\n  user       users    @relation(fields: [user_id], references: [id])\n  product    products @relation(fields: [product_id], references: [id])\n\n  @@map(\"wishlists\")\n}\n\nmodel addresses {\n  id           Int      @id @default(autoincrement())\n  user_id      Int\n  name         String // Full name\n  email        String\n  addressLine1 String\n  addressLine2 String? // Optional\n  town         String // City\n  zip          String // Zip/Postal code\n  state        String\n  phone        String? // Optional\n  created_at   DateTime @default(now())\n  updated_at   DateTime @updatedAt\n  user         users    @relation(fields: [user_id], references: [id])\n\n  @@index([user_id])\n  @@map(\"addresses\")\n}\n\n// Add this to your existing schema.prisma file\n\nmodel payments {\n  id                  Int      @id @default(autoincrement())\n  order_id            Int?\n  razorpay_order_id   String   @unique\n  razorpay_payment_id String?  @unique\n  razorpay_signature  String?\n  amount              Int\n  currency            String   @default(\"INR\")\n  status              String   @default(\"pending\")\n  payment_method      String?\n  user_id             Int?\n  created_at          DateTime @default(now())\n  updated_at          DateTime @updatedAt\n\n  // Relation to orders\n  order orders? @relation(fields: [order_id], references: [id])\n\n  @@index([razorpay_order_id])\n  @@index([user_id])\n  @@index([order_id])\n}\n\nmodel orders {\n  id          Int           @id @default(autoincrement())\n  user_id     Int\n  total       Float\n  status      String        @default(\"pending\")\n  created_at  DateTime      @default(now())\n  user        users         @relation(fields: [user_id], references: [id])\n  order_items order_items[]\n  payments    payments[]\n\n  @@map(\"orders\")\n}\n",
+  "inlineSchemaHash": "415bdad3a25ce8bcbd64b19d6aa92370c9f94d1d8fc644ec42285b9ddf4a5ac9",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"users\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"orders\",\"kind\":\"object\",\"type\":\"orders\",\"relationName\":\"ordersTousers\"},{\"name\":\"cart\",\"kind\":\"object\",\"type\":\"carts\",\"relationName\":\"cartsTousers\"},{\"name\":\"wishlists\",\"kind\":\"object\",\"type\":\"wishlists\",\"relationName\":\"usersTowishlists\"},{\"name\":\"addresses\",\"kind\":\"object\",\"type\":\"addresses\",\"relationName\":\"addressesTousers\"}],\"dbName\":\"users\"},\"products\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"price\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"short_description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"tags\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sku\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"weight\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dimensions\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"color\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"material\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"image\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"rating\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"qty\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"order_items\",\"kind\":\"object\",\"type\":\"order_items\",\"relationName\":\"order_itemsToproducts\"},{\"name\":\"cart_items\",\"kind\":\"object\",\"type\":\"cart_items\",\"relationName\":\"cart_itemsToproducts\"},{\"name\":\"wishlists\",\"kind\":\"object\",\"type\":\"wishlists\",\"relationName\":\"productsTowishlists\"}],\"dbName\":\"products\"},\"orders\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"total\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"users\",\"relationName\":\"ordersTousers\"},{\"name\":\"order_items\",\"kind\":\"object\",\"type\":\"order_items\",\"relationName\":\"order_itemsToorders\"}],\"dbName\":\"orders\"},\"order_items\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"order_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"product_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"quantity\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"price\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"order\",\"kind\":\"object\",\"type\":\"orders\",\"relationName\":\"order_itemsToorders\"},{\"name\":\"product\",\"kind\":\"object\",\"type\":\"products\",\"relationName\":\"order_itemsToproducts\"}],\"dbName\":\"order_items\"},\"carts\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"users\",\"relationName\":\"cartsTousers\"},{\"name\":\"cart_items\",\"kind\":\"object\",\"type\":\"cart_items\",\"relationName\":\"cart_itemsTocarts\"}],\"dbName\":\"carts\"},\"cart_items\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"cart_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"product_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"quantity\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"cart\",\"kind\":\"object\",\"type\":\"carts\",\"relationName\":\"cart_itemsTocarts\"},{\"name\":\"product\",\"kind\":\"object\",\"type\":\"products\",\"relationName\":\"cart_itemsToproducts\"}],\"dbName\":\"cart_items\"},\"wishlists\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"product_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"users\",\"relationName\":\"usersTowishlists\"},{\"name\":\"product\",\"kind\":\"object\",\"type\":\"products\",\"relationName\":\"productsTowishlists\"}],\"dbName\":\"wishlists\"},\"addresses\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"address\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"city\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"state\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"zip_code\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"country\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"users\",\"relationName\":\"addressesTousers\"}],\"dbName\":\"addresses\"}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"users\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"orders\",\"kind\":\"object\",\"type\":\"orders\",\"relationName\":\"ordersTousers\"},{\"name\":\"cart\",\"kind\":\"object\",\"type\":\"carts\",\"relationName\":\"cartsTousers\"},{\"name\":\"wishlists\",\"kind\":\"object\",\"type\":\"wishlists\",\"relationName\":\"usersTowishlists\"},{\"name\":\"addresses\",\"kind\":\"object\",\"type\":\"addresses\",\"relationName\":\"addressesTousers\"}],\"dbName\":\"users\"},\"products\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"price\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"short_description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"tags\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sku\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"weight\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dimensions\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"color\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"material\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"image\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"rating\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"qty\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"order_items\",\"kind\":\"object\",\"type\":\"order_items\",\"relationName\":\"order_itemsToproducts\"},{\"name\":\"cart_items\",\"kind\":\"object\",\"type\":\"cart_items\",\"relationName\":\"cart_itemsToproducts\"},{\"name\":\"wishlists\",\"kind\":\"object\",\"type\":\"wishlists\",\"relationName\":\"productsTowishlists\"}],\"dbName\":\"products\"},\"order_items\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"order_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"product_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"quantity\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"price\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"order\",\"kind\":\"object\",\"type\":\"orders\",\"relationName\":\"order_itemsToorders\"},{\"name\":\"product\",\"kind\":\"object\",\"type\":\"products\",\"relationName\":\"order_itemsToproducts\"}],\"dbName\":\"order_items\"},\"carts\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"users\",\"relationName\":\"cartsTousers\"},{\"name\":\"cart_items\",\"kind\":\"object\",\"type\":\"cart_items\",\"relationName\":\"cart_itemsTocarts\"}],\"dbName\":\"carts\"},\"cart_items\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"cart_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"product_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"quantity\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"cart\",\"kind\":\"object\",\"type\":\"carts\",\"relationName\":\"cart_itemsTocarts\"},{\"name\":\"product\",\"kind\":\"object\",\"type\":\"products\",\"relationName\":\"cart_itemsToproducts\"}],\"dbName\":\"cart_items\"},\"wishlists\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"product_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"users\",\"relationName\":\"usersTowishlists\"},{\"name\":\"product\",\"kind\":\"object\",\"type\":\"products\",\"relationName\":\"productsTowishlists\"}],\"dbName\":\"wishlists\"},\"addresses\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"addressLine1\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"addressLine2\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"town\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"zip\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"state\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"phone\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"users\",\"relationName\":\"addressesTousers\"}],\"dbName\":\"addresses\"},\"payments\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"order_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"razorpay_order_id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"razorpay_payment_id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"razorpay_signature\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"amount\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"currency\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"payment_method\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"order\",\"kind\":\"object\",\"type\":\"orders\",\"relationName\":\"ordersTopayments\"}],\"dbName\":null},\"orders\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"user_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"total\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"users\",\"relationName\":\"ordersTousers\"},{\"name\":\"order_items\",\"kind\":\"object\",\"type\":\"order_items\",\"relationName\":\"order_itemsToorders\"},{\"name\":\"payments\",\"kind\":\"object\",\"type\":\"payments\",\"relationName\":\"ordersTopayments\"}],\"dbName\":\"orders\"}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),

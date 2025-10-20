@@ -28,7 +28,6 @@ const mapCartItem = (cartItem) => {
 const cartServiceImpl = {
   addToCart: async (call, callback) => {
     try {
-      // ✅ Use the shared utility
       const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
       const { id: productId, quantity = 1 } = call.request;
 
@@ -73,7 +72,6 @@ const cartServiceImpl = {
 
   updateCart: async (call, callback) => {
     try {
-      // ✅ Use the shared utility
       const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
       const { id: productId, quantity } = call.request;
 
@@ -116,7 +114,6 @@ const cartServiceImpl = {
 
   deleteCart: async (call, callback) => {
     try {
-      // ✅ Use the shared utility
       const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
       const { id: productId } = call.request;
 
@@ -137,7 +134,6 @@ const cartServiceImpl = {
 
   getCart: async (call, callback) => {
     try {
-      // ✅ Use the shared utility
       const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
 
       if (!userId) {

@@ -3,7 +3,6 @@ import productReducer from "./features/products/products";
 import cartReducer from "./features/cart/cart";
 import wishlistReducer from "./features/wishlist/wishlist";
 import productDetailsReducer from "./features/productDetails/productDetails";
-import addressReducer from "./features/address/address";
 import { combineReducers } from "redux";
 
 export default combineReducers({
@@ -12,5 +11,4 @@ export default combineReducers({
   cart: cartReducer,
   wishlist: wishlistReducer,
   productDetails: productDetailsReducer,
-  address: addressReducer,
 });

@@ -1,55 +1,3 @@
-// import express from "express";
-// import { AuthServiceClient } from "../../../dist/user.js";
-// import grpc from "@grpc/grpc-js";
-// import { successResponse, errorResponse } from "@depot/grpc-utils";
-// import dotenv from "dotenv";
-// dotenv.config();
-
-// const router = express.Router();
-// const AUTH_SERVICE_ADDRESS = process.env.AUTH_SERVICE_ADDRESS;
-
-// const authClient = new AuthServiceClient(
-//   AUTH_SERVICE_ADDRESS,
-//   grpc.credentials.createInsecure()
-// );
-
-// router.post("/signup", async (req, res) => {
-//   const { name, email, password } = req.body;
-
-//   authClient.signup({ name, email, password }, (err, response) => {
-//     if (err) {
-//       return res.status(500).json(errorResponse(err.message));
-//     }
-//     res
-//       .status(201)
-//       .json(successResponse(response.user, "User registered successfully"));
-//   });
-// });
-
-// router.post("/signin", async (req, res) => {
-//   const { email, password } = req.body;
-
-//   authClient.signin({ email, password }, (err, response) => {
-//     if (err) {
-//       return res
-//         .status(401)
-//         .json(errorResponse(err.message || "Invalid credentials"));
-//     }
-//     res.json(
-//       successResponse(
-//         {
-//           user: response.user,
-//           accessToken: response.accessToken,
-//           refreshToken: response.refreshToken,
-//         },
-//         "Login successful"
-//       )
-//     );
-//   });
-// });
-
-// export default router;
-
 import express from "express";
 import { AuthServiceClient } from "../../../dist/user.js";
 import grpc from "@grpc/grpc-js";
@@ -68,10 +16,6 @@ const authClient = new AuthServiceClient(
   grpc.credentials.createInsecure()
 );
 
-/**
- * SIGNUP Route - Register a new user
- * POST /api/v1/auth/signup
- */
 router.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -118,10 +62,6 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-/**
- * SIGNIN Route - Authenticate user
- * POST /api/v1/auth/signin
- */
 router.post("/signin", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -160,10 +100,11 @@ router.post("/signin", async (req, res) => {
         });
       }
 
+      const { password, ...safeUser } = response.user;
       res.json({
         success: true,
         message: "Signed in successfully",
-        user: response.user,
+        user: safeUser,
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
       });
@@ -177,10 +118,6 @@ router.post("/signin", async (req, res) => {
   }
 });
 
-/**
- * REFRESH TOKEN Route - Get new access token
- * POST /api/v1/auth/refresh-token
- */
 router.post("/refresh-token", async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -235,14 +172,7 @@ router.post("/refresh-token", async (req, res) => {
   }
 });
 
-/**
- * LOGOUT Route (Optional) - Clear tokens on client side
- * POST /api/v1/auth/logout
- * Note: With JWT, logout is typically handled client-side by removing tokens
- */
 router.post("/logout", (req, res) => {
-  // In a stateless JWT setup, we don't need to do anything server-side
-  // The client will remove the tokens from localStorage
   res.json({
     success: true,
     message: "Logged out successfully",

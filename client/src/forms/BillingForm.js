@@ -1,18 +1,11 @@
-import React from "react";
 import { useFormik } from "formik";
 import { Button } from "@mui/material";
 import { TextField } from "@mui/material";
 import states from "../assets/data/States";
 import MenuItem from "@mui/material/MenuItem";
 import { validationSchema } from "../schema/BillingSchema";
-import useSelectors from "../customHooks/useSelectors";
-import { useDispatch } from "react-redux";
-import { addAddress, fetchAddress } from "../redux/features/address/address";
 
 function BillingForm(props) {
-  const { email } = useSelectors();
-  const dispatch = useDispatch();
-
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -26,11 +19,8 @@ function BillingForm(props) {
 
     validationSchema: validationSchema,
     onSubmit: async (address) => {
-      dispatch(addAddress({ email, address })).then(() => {
-        props.setPersonalDetails(address);
-        props.setBillingFormSubmitted(true);
-        dispatch(fetchAddress(email));
-      });
+      props.setPersonalDetails(address);
+      props.setBillingFormSubmitted(true);
     },
   });
 

@@ -145,14 +145,6 @@ exports.Prisma.ProductsScalarFieldEnum = {
   qty: 'qty'
 };
 
-exports.Prisma.OrdersScalarFieldEnum = {
-  id: 'id',
-  user_id: 'user_id',
-  total: 'total',
-  status: 'status',
-  created_at: 'created_at'
-};
-
 exports.Prisma.Order_itemsScalarFieldEnum = {
   id: 'id',
   order_id: 'order_id',
@@ -183,11 +175,39 @@ exports.Prisma.WishlistsScalarFieldEnum = {
 exports.Prisma.AddressesScalarFieldEnum = {
   id: 'id',
   user_id: 'user_id',
-  address: 'address',
-  city: 'city',
+  name: 'name',
+  email: 'email',
+  addressLine1: 'addressLine1',
+  addressLine2: 'addressLine2',
+  town: 'town',
+  zip: 'zip',
   state: 'state',
-  zip_code: 'zip_code',
-  country: 'country'
+  phone: 'phone',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.PaymentsScalarFieldEnum = {
+  id: 'id',
+  order_id: 'order_id',
+  razorpay_order_id: 'razorpay_order_id',
+  razorpay_payment_id: 'razorpay_payment_id',
+  razorpay_signature: 'razorpay_signature',
+  amount: 'amount',
+  currency: 'currency',
+  status: 'status',
+  payment_method: 'payment_method',
+  user_id: 'user_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.OrdersScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  total: 'total',
+  status: 'status',
+  created_at: 'created_at'
 };
 
 exports.Prisma.SortOrder = {
@@ -200,16 +220,22 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
 
 exports.Prisma.ModelName = {
   users: 'users',
   products: 'products',
-  orders: 'orders',
   order_items: 'order_items',
   carts: 'carts',
   cart_items: 'cart_items',
   wishlists: 'wishlists',
-  addresses: 'addresses'
+  addresses: 'addresses',
+  payments: 'payments',
+  orders: 'orders'
 };
 
 /**
