@@ -46,8 +46,9 @@ router.get("/", (req, res) => {
     });
   }
 
+  // Use camelCase for TypeScript generated client
   orderClient.listOrdersByUser(
-    { user_id },
+    { userId: user_id }, // ✅ camelCase
     createMetadata(req),
     (err, response) => {
       if (err) {
@@ -90,8 +91,8 @@ router.get("/:id", (req, res) => {
         });
       }
 
-      // Verify order belongs to user
-      if (response.order.user_id !== user_id) {
+      // Verify order belongs to user (response uses camelCase)
+      if (response.order.userId !== user_id) {
         return res.status(403).json({
           success: false,
           message: "Access denied",
@@ -126,13 +127,22 @@ router.post("/create", (req, res) => {
     });
   }
 
+  // Convert to camelCase for TypeScript generated client
   orderClient.createOrder(
     {
-      user_id,
-      items,
+      userId: user_id, // ✅ camelCase
+      items: items.map((item) => ({
+        id: 0,
+        orderId: 0,
+        productId: item.product_id || item.productId,
+        quantity: item.quantity,
+        price: item.price,
+        title: item.title || "",
+        image: item.image || "",
+      })),
       total,
-      payment_id,
-      shipping_address: JSON.stringify(shipping_address),
+      paymentId: payment_id, // ✅ camelCase
+      shippingAddress: JSON.stringify(shipping_address), // ✅ camelCase
     },
     createMetadata(req),
     (err, response) => {

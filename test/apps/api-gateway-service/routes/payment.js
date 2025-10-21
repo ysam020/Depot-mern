@@ -79,6 +79,16 @@ router.post("/verify", (req, res) => {
 
   const user_id = getUserIdFromToken(req);
 
+  console.log("📥 Verify payment request:", {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    amount,
+    user_id,
+    cart_items_count: cart_items?.length,
+    shipping_address,
+  });
+
   if (!user_id) {
     return res.status(401).json({
       success: false,
@@ -107,16 +117,41 @@ router.post("/verify", (req, res) => {
     });
   }
 
-  paymentClient.verifyPayment(
-    {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      amount,
-      user_id,
-      cart_items,
-      shipping_address,
+  // CRITICAL FIX: Convert snake_case to camelCase for TypeScript generated client
+  // The PaymentServiceClient expects camelCase field names!
+  const verifyPaymentRequest = {
+    razorpayOrderId: String(razorpay_order_id), // ✅ camelCase!
+    razorpayPaymentId: String(razorpay_payment_id), // ✅ camelCase!
+    razorpaySignature: String(razorpay_signature), // ✅ camelCase!
+    amount: parseInt(amount) || 0,
+    userId: parseInt(user_id) || 0, // ✅ camelCase!
+    cartItems: cart_items.map((item) => ({
+      // ✅ camelCase!
+      id: parseInt(item.id) || 0,
+      title: String(item.title || ""),
+      price: parseInt(item.price) || 0,
+      image: String(item.image || ""),
+      quantity: parseInt(item.quantity) || 0,
+    })),
+    shippingAddress: {
+      // ✅ camelCase!
+      firstName: String(shipping_address.first_name || ""), // ✅ camelCase!
+      lastName: String(shipping_address.last_name || ""), // ✅ camelCase!
+      address: String(shipping_address.address || ""),
+      city: String(shipping_address.city || ""),
+      state: String(shipping_address.state || ""),
+      pincode: String(shipping_address.pincode || ""),
+      phone: String(shipping_address.phone || ""),
     },
+  };
+
+  console.log(
+    "📤 Sending to payment service:",
+    JSON.stringify(verifyPaymentRequest, null, 2)
+  );
+
+  paymentClient.verifyPayment(
+    verifyPaymentRequest,
     createMetadata(req),
     (err, response) => {
       if (err) {

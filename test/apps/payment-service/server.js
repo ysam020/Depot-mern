@@ -6,6 +6,7 @@ import prisma from "@depot/prisma";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { OrderServiceClient } from "../../dist/order.js";
 
 dotenv.config();
 
@@ -27,27 +28,11 @@ const paymentPackageDef = protoLoader.loadSync(PAYMENT_PROTO_PATH, {
 
 const paymentProto = grpc.loadPackageDefinition(paymentPackageDef).payments;
 
-// Load Order Service proto for client
-const ORDER_PROTO_PATH = path.resolve(
-  __dirname,
-  "../../packages/proto-defs/order.proto"
-);
-
-const orderPackageDef = protoLoader.loadSync(ORDER_PROTO_PATH, {
-  keepCase: true,
-  longs: String,
-  enums: String,
-  defaults: true,
-  oneofs: true,
-});
-
-const orderProto = grpc.loadPackageDefinition(orderPackageDef).orders;
-
-// Initialize Order Service gRPC client
+// Initialize Order Service gRPC client using generated TypeScript client
 const ORDER_SERVICE_ADDRESS =
   process.env.ORDER_SERVICE_ADDRESS || "localhost:50053";
 
-const orderClient = new orderProto.OrderService(
+const orderClient = new OrderServiceClient(
   ORDER_SERVICE_ADDRESS,
   grpc.credentials.createInsecure()
 );
@@ -59,6 +44,7 @@ const razorpay = new Razorpay({
 });
 
 console.log("🔑 Razorpay initialized with key:", process.env.RAZORPAY_KEY_ID);
+console.log("📡 Order Service address:", ORDER_SERVICE_ADDRESS);
 
 // Implement the payment service
 const paymentServiceImpl = {
@@ -117,9 +103,10 @@ const paymentServiceImpl = {
         shipping_address,
       } = call.request;
 
-      console.log(`🔐 Verifying payment: ${razorpay_payment_id}`);
-      console.log(`👤 User ID: ${user_id}`);
-      console.log(`📦 Cart items: ${cart_items?.length || 0} items`);
+      console.log("🔐 Verifying payment:", razorpay_payment_id);
+      console.log("👤 User ID:", user_id);
+      console.log("📦 Cart items:", cart_items?.length || 0, "items");
+      console.log("💰 Amount:", amount);
 
       // Validate required fields
       if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -181,88 +168,29 @@ const paymentServiceImpl = {
         // Continue anyway as signature is valid
       }
 
-      // Step 3: Save payment to database
-      const payment = await prisma.payments.create({
-        data: {
-          razorpay_order_id,
-          razorpay_payment_id,
-          razorpay_signature,
-          amount,
-          currency: "INR",
-          status: "completed",
-          user_id,
-          payment_method: paymentDetails?.method || "unknown",
-        },
+      // Step 3: Check if payment already exists or create new payment
+      let payment = await prisma.payments.findUnique({
+        where: { razorpay_order_id: razorpay_order_id },
       });
 
-      console.log(`💾 Payment saved to database: ID=${payment.id}`);
+      if (payment) {
+        console.log(
+          `⚠️ Payment already exists for order: ${razorpay_order_id}`
+        );
 
-      // Step 4: Prepare order items for Order Service
-      const orderItems = cart_items.map((item) => ({
-        product_id: item.id,
-        quantity: item.quantity,
-        price: item.price,
-        title: item.title || "",
-        image: item.image || "",
-      }));
+        // Check if order was already created
+        if (payment.order_id) {
+          console.log(
+            `✅ Order already created: Order ID = ${payment.order_id}`
+          );
 
-      console.log(`📞 Calling Order Service to create order...`);
-
-      // Step 5: Create order using Order Service (gRPC call)
-      orderClient.createOrder(
-        {
-          user_id,
-          items: orderItems,
-          total: amount,
-          payment_id: payment.id,
-          shipping_address: JSON.stringify(shipping_address),
-        },
-        async (orderErr, orderResponse) => {
-          if (orderErr) {
-            console.error("❌ Order Creation Error:", orderErr);
-
-            // Payment was successful but order creation failed
-            // Update payment status to indicate issue
-            await prisma.payments
-              .update({
-                where: { id: payment.id },
-                data: { status: "payment_success_order_failed" },
-              })
-              .catch((updateErr) => {
-                console.error("❌ Failed to update payment status:", updateErr);
-              });
-
-            return callback({
-              code: grpc.status.INTERNAL,
-              message: `Payment successful but order creation failed: ${orderErr.message}`,
-            });
-          }
-
-          console.log(`✅ Order created: ID=${orderResponse.order.id}`);
-
-          // Step 6: Update payment with order_id
-          try {
-            await prisma.payments.update({
-              where: { id: payment.id },
-              data: { order_id: orderResponse.order.id },
-            });
-
-            console.log(
-              `🔗 Payment linked to order: Payment#${payment.id} → Order#${orderResponse.order.id}`
-            );
-          } catch (updateErr) {
-            console.error("⚠️ Payment Update Error:", updateErr);
-            // Order was created but payment update failed
-            // This is less critical, continue
-          }
-
-          // Step 7: Return success response
-          callback(null, {
+          // Return the existing payment and order info
+          return callback(null, {
             success: true,
-            message: "Payment verified and order created successfully",
+            message: "Payment already processed and order created",
             payment: {
               id: payment.id.toString(),
-              order_id: orderResponse.order.id,
+              order_id: payment.order_id,
               razorpay_order_id: payment.razorpay_order_id,
               razorpay_payment_id: payment.razorpay_payment_id,
               razorpay_signature: payment.razorpay_signature,
@@ -273,12 +201,136 @@ const paymentServiceImpl = {
               payment_method: payment.payment_method,
             },
           });
+        }
+
+        // Payment exists but order not created - update payment details
+        payment = await prisma.payments.update({
+          where: { id: payment.id },
+          data: {
+            razorpay_payment_id,
+            razorpay_signature,
+            status: "completed",
+            payment_method: paymentDetails?.method || "unknown",
+          },
+        });
+
+        console.log(`🔄 Payment updated: ID=${payment.id}`);
+      } else {
+        // Create new payment
+        payment = await prisma.payments.create({
+          data: {
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature,
+            amount,
+            currency: "INR",
+            status: "completed",
+            user_id,
+            payment_method: paymentDetails?.method || "unknown",
+          },
+        });
+
+        console.log(`💾 Payment saved to database: ID=${payment.id}`);
+      }
+
+      // Step 4: Prepare order items for Order Service
+      console.log("🔍 Raw cart items:", JSON.stringify(cart_items, null, 2));
+
+      // CRITICAL: Convert to camelCase for OrderServiceClient (TypeScript generated)
+      const orderItems = cart_items.map((item) => {
+        const mappedItem = {
+          id: 0, // Will be auto-generated
+          orderId: 0, // ✅ camelCase! Will be set by order service
+          productId: parseInt(item.id) || 0, // ✅ camelCase!
+          quantity: parseInt(item.quantity) || 1,
+          price: parseFloat(item.price) || 0.0,
+          title: String(item.title || ""),
+          image: String(item.image || ""),
+        };
+
+        console.log(`📦 Mapped item:`, mappedItem);
+        return mappedItem;
+      });
+
+      console.log("✅ All order items prepared");
+      console.log("📞 Calling Order Service to create order...");
+
+      // Step 5: Create order using Order Service (gRPC call with camelCase)
+      // CRITICAL: OrderServiceClient expects camelCase field names!
+      const orderRequest = {
+        userId: parseInt(user_id), // ✅ camelCase!
+        items: orderItems,
+        total: parseFloat(amount),
+        paymentId: parseInt(payment.id), // ✅ camelCase!
+        shippingAddress: JSON.stringify(shipping_address), // ✅ camelCase!
+      };
+
+      console.log("📤 Order request:", JSON.stringify(orderRequest, null, 2));
+
+      orderClient.createOrder(orderRequest, async (orderErr, orderResponse) => {
+        if (orderErr) {
+          console.error("❌ Order Creation Error:", orderErr);
+          console.error("Error details:", {
+            code: orderErr.code,
+            message: orderErr.message,
+            details: orderErr.details,
+          });
+
+          // Payment was successful but order creation failed
+          // Update payment status to indicate issue
+          await prisma.payments
+            .update({
+              where: { id: payment.id },
+              data: { status: "payment_success_order_failed" },
+            })
+            .catch((updateErr) => {
+              console.error("❌ Failed to update payment status:", updateErr);
+            });
+
+          return callback({
+            code: grpc.status.INTERNAL,
+            message: `Payment successful but order creation failed: ${orderErr.message}`,
+          });
+        }
+
+        console.log(`✅ Order created: ID=${orderResponse.order.id}`);
+
+        // Step 6: Update payment with order_id
+        try {
+          await prisma.payments.update({
+            where: { id: payment.id },
+            data: { order_id: orderResponse.order.id },
+          });
 
           console.log(
-            `🎉 Payment verification complete! Order #${orderResponse.order.id} created for user ${user_id}`
+            `🔗 Payment linked to order: Payment#${payment.id} → Order#${orderResponse.order.id}`
           );
+        } catch (updateErr) {
+          console.error("⚠️ Payment Update Error:", updateErr);
+          // Order was created but payment update failed
+          // This is less critical, continue
         }
-      );
+
+        // Step 7: Return success response
+        console.log("🎉 Payment verification complete!");
+
+        callback(null, {
+          success: true,
+          message: "Payment verified and order created successfully",
+          payment: {
+            id: payment.id.toString(),
+            order_id: orderResponse.order.id,
+            razorpay_order_id: payment.razorpay_order_id,
+            razorpay_payment_id: payment.razorpay_payment_id,
+            razorpay_signature: payment.razorpay_signature,
+            amount: payment.amount,
+            currency: payment.currency,
+            status: payment.status,
+            user_id: payment.user_id,
+            payment_method: payment.payment_method,
+          },
+        });
+      });
     } catch (err) {
       console.error("❌ Verify Payment Error:", err);
       callback({
@@ -306,36 +358,21 @@ function startServer() {
         throw err;
       }
       console.log(`🟢 PaymentService running on port ${port}`);
-      console.log(`📡 Available methods: CreateOrder, VerifyPayment`);
-      console.log(`🔗 Connected to OrderService at ${ORDER_SERVICE_ADDRESS}`);
-      console.log(
-        `💳 Razorpay Mode: ${process.env.RAZORPAY_KEY_ID?.startsWith("rzp_test") ? "TEST" : "LIVE"}`
-      );
     }
   );
 }
 
+startServer();
+
 // Graceful shutdown
 process.on("SIGINT", async () => {
-  console.log("\n🛑 Shutting down PaymentService...");
+  console.log("\n🛑 Shutting down Payment Service...");
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
-  console.log("\n🛑 Shutting down PaymentService...");
+  console.log("\n🛑 Shutting down Payment Service...");
   await prisma.$disconnect();
   process.exit(0);
 });
-
-// Test database connection
-prisma
-  .$connect()
-  .then(() => {
-    console.log("✅ Database connected");
-    startServer();
-  })
-  .catch((err) => {
-    console.error("❌ Database connection failed:", err);
-    process.exit(1);
-  });

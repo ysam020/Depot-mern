@@ -9,7 +9,7 @@ import {
   Wishlist as WishlistMessage,
 } from "../../dist/wishlist.js";
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const JWT_SECRET = process.env.JWT_SECRET;
 

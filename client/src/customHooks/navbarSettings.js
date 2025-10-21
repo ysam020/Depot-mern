@@ -20,6 +20,12 @@ function useNavbarSettings() {
       },
     },
     {
+      name: "Orders",
+      onClick: () => {
+        navigate("/orders");
+      },
+    },
+    {
       name: "Addresses",
       onClick: () => {
         navigate("/addresses");

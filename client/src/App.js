@@ -7,6 +7,9 @@ import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Wishlist from "./pages/Wishlist";
+import Orders from "./pages/Orders";
+import OrderDetails from "./pages/OrderDetails";
+import TrackOrder from "./pages/TrackOrder";
 
 function App() {
   return (
@@ -17,6 +20,9 @@ function App() {
           <Route exact path="/" element={<Home />} />
           <Route exact path="/cart" element={<Cart />} />
           <Route exact path="/wishlist" element={<Wishlist />} />
+          <Route exact path="/orders" element={<Orders />} />
+          <Route exact path="/orders/:id" element={<OrderDetails />} />
+          <Route exact path="/track-order/:id" element={<TrackOrder />} />
           <Route
             exact
             path="/product/:productId"

@@ -3,7 +3,7 @@ import { AuthServiceClient } from "../../../dist/user.js";
 import grpc from "@grpc/grpc-js";
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const router = express.Router();
 

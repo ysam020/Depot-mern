@@ -2,7 +2,7 @@ import express from "express";
 import { ProductServiceClient } from "../../../dist/product.js";
 import grpc from "@grpc/grpc-js";
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const PRODUCT_SERVICE_ADDRESS = process.env.PRODUCT_SERVICE_ADDRESS;
 

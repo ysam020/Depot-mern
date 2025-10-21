@@ -3,7 +3,7 @@ import grpc from "@grpc/grpc-js";
 import { WishlistServiceClient } from "../../../dist/wishlist.js";
 import { jwtMiddleware } from "../middlewares/auth.js";
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const router = express.Router();
 const WISHLIST_SERVICE_ADDRESS = process.env.WISHLIST_SERVICE_ADDRESS;

@@ -10,7 +10,7 @@ import {
   Cart as CartMessage,
 } from "../../dist/cart.js";
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const JWT_SECRET = process.env.JWT_SECRET;
 

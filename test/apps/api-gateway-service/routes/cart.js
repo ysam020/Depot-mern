@@ -2,7 +2,7 @@ import express from "express";
 import grpc from "@grpc/grpc-js";
 import { CartServiceClient } from "../../../dist/cart.js";
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const router = express.Router();
 const CART_SERVICE_ADDRESS = process.env.CART_SERVICE_ADDRESS;

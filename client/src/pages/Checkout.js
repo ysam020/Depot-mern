@@ -50,6 +50,11 @@ function Checkout() {
       return;
     }
 
+    if (!personalDetails) {
+      alert("Please fill in your billing details");
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -65,18 +70,28 @@ function Checkout() {
 
       const totalAmount = calculateTotal();
 
-      // Prepare shipping address
+      // Parse name into first and last name
+      const nameParts = (personalDetails.name || "").trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
+      // Map form fields to shipping address structure
       const shippingAddress = {
-        first_name: personalDetails?.firstName || "",
-        last_name: personalDetails?.lastName || "",
-        address: personalDetails?.address || "",
-        city: personalDetails?.city || "",
-        state: personalDetails?.state || "",
-        pincode: personalDetails?.pincode || "",
-        phone: personalDetails?.phone || "",
+        first_name: firstName,
+        last_name: lastName,
+        address: `${personalDetails.addressLine1}${
+          personalDetails.addressLine2
+            ? ", " + personalDetails.addressLine2
+            : ""
+        }`,
+        city: personalDetails.town || "",
+        state: personalDetails.state || "",
+        pincode: personalDetails.zip || "",
+        phone: personalDetails.phone || "", // Add phone field to your form if needed
       };
 
       console.log("Creating Razorpay order...");
+      console.log("Shipping Address:", shippingAddress);
 
       // Create order on backend
       const { data } = await axios.post(
@@ -167,19 +182,28 @@ function Checkout() {
                   orderId ? `Order #${orderId}` : "Your order"
                 } has been placed.`
               );
+
+              // Clear cart and redirect
               navigate("/");
+            } else {
+              alert("Payment verification failed. Please contact support.");
             }
           } catch (error) {
             console.error("Payment verification error:", error);
-            alert("Payment verification failed. Please contact support.");
+            console.error("Error details:", error.response?.data);
+            alert(
+              `Payment verification failed: ${
+                error.response?.data?.error || error.message
+              }. Please contact support.`
+            );
           } finally {
             setIsProcessing(false);
           }
         },
         prefill: {
-          name: `${shippingAddress.first_name} ${shippingAddress.last_name}`,
-          email: email || "",
-          contact: shippingAddress.phone || "",
+          name: personalDetails.name || "",
+          email: personalDetails.email || email || "",
+          contact: personalDetails.phone || "",
         },
         notes: {
           address: shippingAddress.address,
@@ -211,7 +235,9 @@ function Checkout() {
         stack: error.stack,
       });
       alert(
-        `Failed to initiate payment: ${error.message}. Check console for details.`
+        `Failed to initiate payment: ${
+          error.response?.data?.error || error.message
+        }. Check console for details.`
       );
       setIsProcessing(false);
     }
@@ -236,16 +262,27 @@ function Checkout() {
 
               <button
                 onClick={handlePayment}
-                disabled={isProcessing || cartData.loading}
+                disabled={isProcessing || cartData.loading || !personalDetails}
                 className="submit-card-details"
                 style={{
                   marginTop: "30px",
-                  cursor: isProcessing ? "not-allowed" : "pointer",
-                  opacity: isProcessing ? 0.6 : 1,
+                  cursor:
+                    isProcessing || !personalDetails
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity: isProcessing || !personalDetails ? 0.6 : 1,
                 }}
               >
                 {isProcessing ? "Processing..." : "Proceed to Payment"}
               </button>
+
+              {!personalDetails && (
+                <p
+                  style={{ color: "#888", marginTop: "10px", fontSize: "14px" }}
+                >
+                  Please fill in billing details first
+                </p>
+              )}
             </div>
           </Col>
         </Row>
