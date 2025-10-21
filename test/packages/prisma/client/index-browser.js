@@ -172,19 +172,13 @@ exports.Prisma.WishlistsScalarFieldEnum = {
   product_id: 'product_id'
 };
 
-exports.Prisma.AddressesScalarFieldEnum = {
+exports.Prisma.OrdersScalarFieldEnum = {
   id: 'id',
   user_id: 'user_id',
-  name: 'name',
-  email: 'email',
-  addressLine1: 'addressLine1',
-  addressLine2: 'addressLine2',
-  town: 'town',
-  zip: 'zip',
-  state: 'state',
-  phone: 'phone',
+  total: 'total',
+  status: 'status',
   created_at: 'created_at',
-  updated_at: 'updated_at'
+  shipping_address: 'shipping_address'
 };
 
 exports.Prisma.PaymentsScalarFieldEnum = {
@@ -200,14 +194,6 @@ exports.Prisma.PaymentsScalarFieldEnum = {
   user_id: 'user_id',
   created_at: 'created_at',
   updated_at: 'updated_at'
-};
-
-exports.Prisma.OrdersScalarFieldEnum = {
-  id: 'id',
-  user_id: 'user_id',
-  total: 'total',
-  status: 'status',
-  created_at: 'created_at'
 };
 
 exports.Prisma.SortOrder = {
@@ -233,9 +219,8 @@ exports.Prisma.ModelName = {
   carts: 'carts',
   cart_items: 'cart_items',
   wishlists: 'wishlists',
-  addresses: 'addresses',
-  payments: 'payments',
-  orders: 'orders'
+  orders: 'orders',
+  payments: 'payments'
 };
 
 /**

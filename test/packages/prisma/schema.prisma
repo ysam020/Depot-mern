@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
   output   = "../prisma/client"
@@ -17,7 +16,6 @@ model users {
   orders      orders[]
   cart        carts?
   wishlists   wishlists[]
-  addresses   addresses[]
   @@map("users")
 }
 
@@ -82,26 +80,20 @@ model wishlists {
   @@map("wishlists")
 }
 
-model addresses {
-  id            Int      @id @default(autoincrement())
-  user_id       Int
-  name          String   // Full name
-  email         String
-  addressLine1  String
-  addressLine2  String?  // Optional
-  town          String   // City
-  zip           String   // Zip/Postal code
-  state         String
-  phone         String?  // Optional
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  user          users    @relation(fields: [user_id], references: [id])
-  
-  @@map("addresses")
-  @@index([user_id])
-}
+// REMOVED: addresses model - no longer needed
 
-// Add this to your existing schema.prisma file
+model orders {
+  id               Int           @id @default(autoincrement())
+  user_id          Int
+  total            Float
+  status           String        @default("pending")
+  created_at       DateTime      @default(now())
+  shipping_address String?       // Store as JSON string
+  user             users         @relation(fields: [user_id], references: [id])
+  order_items      order_items[]
+  payments         payments[]
+  @@map("orders")
+}
 
 model payments {
   id                   Int      @id @default(autoincrement())
@@ -123,17 +115,4 @@ model payments {
   @@index([razorpay_order_id])
   @@index([user_id])
   @@index([order_id])
-}
-
-
-model orders {
-  id          Int           @id @default(autoincrement())
-  user_id     Int
-  total       Float
-  status      String        @default("pending")
-  created_at  DateTime      @default(now())
-  user        users         @relation(fields: [user_id], references: [id])
-  order_items order_items[]
-  payments    payments[]
-  @@map("orders")
 }

@@ -43,25 +43,27 @@ const orderServiceImpl = {
 
       // Create order with order items in a transaction
       const order = await prisma.$transaction(async (tx) => {
-        // Create the order
+        // Create the order with shipping address
         const newOrder = await tx.orders.create({
           data: {
-            user_id: userId, // Convert camelCase to snake_case for DB
+            user_id: userId,
             total,
             status: "confirmed",
+            shipping_address: shippingAddress, // ✅ Save shipping address as JSON string
           },
         });
 
-        console.log(`✅ Order created: ID=${newOrder.id}`);
+        console.log(
+          `✅ Order created: ID=${newOrder.id}, Shipping saved: ${!!shippingAddress}`
+        );
 
         // Create order items using the existing order_items table
-        // Items come in camelCase (productId) from the generated client
         const orderItems = await Promise.all(
           items.map((item) =>
             tx.order_items.create({
               data: {
                 order_id: newOrder.id,
-                product_id: item.productId, // camelCase from request!
+                product_id: item.productId,
                 quantity: item.quantity,
                 price: item.price,
               },
@@ -83,7 +85,7 @@ const orderServiceImpl = {
         await Promise.all(
           items.map(async (item) => {
             const product = await tx.products.findUnique({
-              where: { id: item.productId }, // camelCase from request!
+              where: { id: item.productId },
             });
 
             if (!product) {
@@ -96,63 +98,52 @@ const orderServiceImpl = {
               );
             }
 
-            return tx.products.update({
-              where: { id: item.productId }, // camelCase from request!
-              data: {
-                qty: {
-                  decrement: item.quantity,
-                },
-              },
+            await tx.products.update({
+              where: { id: item.productId },
+              data: { qty: product.qty - item.quantity },
             });
+
+            console.log(
+              `✅ Updated product ${item.productId} qty: ${product.qty} -> ${product.qty - item.quantity}`
+            );
           })
         );
 
-        console.log(`✅ Product quantities updated`);
-
-        // Clear user's cart after order creation
-        const cart = await tx.carts.findUnique({
-          where: { user_id: userId }, // Use camelCase userId
-          include: { cart_items: true },
-        });
-
-        if (cart && cart.cart_items.length > 0) {
-          await tx.cart_items.deleteMany({
-            where: { cart_id: cart.id },
+        // If paymentId is provided, link the payment to this order
+        if (paymentId) {
+          await tx.payments.update({
+            where: { id: paymentId },
+            data: { order_id: newOrder.id },
           });
-          console.log(`✅ Cart cleared for user ${userId}`);
+          console.log(`✅ Linked payment ${paymentId} to order ${newOrder.id}`);
         }
 
         return {
           ...newOrder,
-          order_items: orderItems.map((item) => ({
-            id: item.id,
-            order_id: item.order_id,
-            product_id: item.product_id,
-            quantity: item.quantity,
-            price: item.price,
-            title: item.product.title,
-            image: item.product.image,
-          })),
+          order_items: orderItems,
         };
       });
 
-      console.log(
-        `🎉 Order #${order.id} created successfully for user ${userId}`
-      );
-
-      // CRITICAL FIX: Pass Date object directly - fromPartial will handle conversion
       callback(
         null,
         CreateOrderResponse.fromPartial({
           order: {
             id: order.id,
-            userId: order.user_id, // Convert back to camelCase for response
+            userId: order.user_id,
             total: order.total,
             status: order.status,
-            createdAt: order.created_at, // ✅ Just pass the Date object!
-            orderItems: order.order_items, // camelCase for response
-            paymentId: paymentId,
-            shippingAddress: shippingAddress,
+            createdAt: order.created_at,
+            orderItems: order.order_items.map((item) => ({
+              id: item.id,
+              orderId: item.order_id,
+              productId: item.product_id,
+              quantity: item.quantity,
+              price: item.price,
+              title: item.product.title,
+              image: item.product.image,
+            })),
+            paymentId: paymentId || 0,
+            shippingAddress: order.shipping_address || "", // ✅ Include shipping address in response
           },
           success: true,
           message: "Order created successfully",
@@ -160,22 +151,6 @@ const orderServiceImpl = {
       );
     } catch (err) {
       console.error("❌ Create Order Error:", err);
-
-      // Handle specific errors
-      if (err.message.includes("Insufficient stock")) {
-        return callback({
-          code: grpc.status.FAILED_PRECONDITION,
-          message: err.message,
-        });
-      }
-
-      if (err.message.includes("not found")) {
-        return callback({
-          code: grpc.status.NOT_FOUND,
-          message: err.message,
-        });
-      }
-
       callback({
         code: grpc.status.INTERNAL,
         message: err.message || "Failed to create order",
@@ -201,13 +176,6 @@ const orderServiceImpl = {
               },
             },
           },
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
         },
       });
 
@@ -223,20 +191,21 @@ const orderServiceImpl = {
         GetOrderResponse.fromPartial({
           order: {
             id: order.id,
-            userId: order.user_id, // camelCase for response
+            userId: order.user_id,
             total: order.total,
             status: order.status,
-            createdAt: order.created_at, // ✅ Just pass the Date object!
+            createdAt: order.created_at,
             orderItems: order.order_items.map((item) => ({
-              // camelCase
               id: item.id,
-              orderId: item.order_id, // camelCase
-              productId: item.product_id, // camelCase
+              orderId: item.order_id,
+              productId: item.product_id,
               quantity: item.quantity,
               price: item.price,
               title: item.product.title,
               image: item.product.image,
             })),
+            paymentId: 0,
+            shippingAddress: order.shipping_address || "", // ✅ Include shipping address
           },
         })
       );
@@ -244,7 +213,7 @@ const orderServiceImpl = {
       console.error("❌ Get Order Error:", err);
       callback({
         code: grpc.status.INTERNAL,
-        message: err.message || "Failed to fetch order",
+        message: err.message || "Failed to get order",
       });
     }
   },
@@ -252,10 +221,10 @@ const orderServiceImpl = {
   // List orders by user
   listOrdersByUser: async (call, callback) => {
     try {
-      const { userId } = call.request; // camelCase from request
+      const { userId } = call.request;
 
       const orders = await prisma.orders.findMany({
-        where: { user_id: userId }, // Convert to snake_case for DB
+        where: { user_id: userId },
         include: {
           order_items: {
             include: {
@@ -268,9 +237,7 @@ const orderServiceImpl = {
             },
           },
         },
-        orderBy: {
-          created_at: "desc",
-        },
+        orderBy: { created_at: "desc" },
       });
 
       callback(
@@ -278,20 +245,21 @@ const orderServiceImpl = {
         ListOrdersByUserResponse.fromPartial({
           orders: orders.map((order) => ({
             id: order.id,
-            userId: order.user_id, // camelCase for response
+            userId: order.user_id,
             total: order.total,
             status: order.status,
-            createdAt: order.created_at, // ✅ Just pass the Date object!
+            createdAt: order.created_at,
             orderItems: order.order_items.map((item) => ({
-              // camelCase
               id: item.id,
-              orderId: item.order_id, // camelCase
-              productId: item.product_id, // camelCase
+              orderId: item.order_id,
+              productId: item.product_id,
               quantity: item.quantity,
               price: item.price,
               title: item.product.title,
               image: item.product.image,
             })),
+            paymentId: 0,
+            shippingAddress: order.shipping_address || "", // ✅ Include shipping address
           })),
         })
       );
@@ -299,7 +267,7 @@ const orderServiceImpl = {
       console.error("❌ List Orders Error:", err);
       callback({
         code: grpc.status.INTERNAL,
-        message: err.message || "Failed to fetch orders",
+        message: err.message || "Failed to list orders",
       });
     }
   },
@@ -312,12 +280,10 @@ const orderServiceImpl = {
       const validStatuses = [
         "pending",
         "confirmed",
-        "processing",
         "shipped",
         "delivered",
         "cancelled",
       ];
-
       if (!validStatuses.includes(status)) {
         return callback({
           code: grpc.status.INVALID_ARGUMENT,
@@ -347,20 +313,21 @@ const orderServiceImpl = {
         UpdateOrderStatusResponse.fromPartial({
           order: {
             id: order.id,
-            userId: order.user_id, // camelCase for response
+            userId: order.user_id,
             total: order.total,
             status: order.status,
-            createdAt: order.created_at, // ✅ Just pass the Date object!
+            createdAt: order.created_at,
             orderItems: order.order_items.map((item) => ({
-              // camelCase
               id: item.id,
-              orderId: item.order_id, // camelCase
-              productId: item.product_id, // camelCase
+              orderId: item.order_id,
+              productId: item.product_id,
               quantity: item.quantity,
               price: item.price,
               title: item.product.title,
               image: item.product.image,
             })),
+            paymentId: 0,
+            shippingAddress: order.shipping_address || "", // ✅ Include shipping address
           },
           success: true,
           message: "Order status updated successfully",

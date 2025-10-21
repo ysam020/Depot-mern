@@ -5,7 +5,7 @@ function useRegister() {
   const navigate = useNavigate();
 
   async function register(values, handleCloseModal) {
-    await apiClient.post("/signup", values).then((res) => {
+    await apiClient.post("/auth/signup", values).then((res) => {
       navigate("/");
       alert(res.data.message);
     });

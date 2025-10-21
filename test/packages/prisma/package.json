@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "migrate": "dotenvx run -f ../../.env -- prisma migrate dev --schema=./schema.prisma",
+    "reset": "dotenvx run -f ../../.env -- prisma migrate reset --schema=./schema.prisma",
     "generate": "dotenvx run -f ../../.env -- prisma generate --schema=./schema.prisma"
   },
   "keywords": [],
