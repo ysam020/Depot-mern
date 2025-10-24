@@ -26,9 +26,6 @@ export class BaseGrpcService {
     this.setupGracefulShutdown();
   }
 
-  /**
-   * Start the gRPC server
-   */
   start() {
     return new Promise((resolve, reject) => {
       this.server.bindAsync(
@@ -47,22 +44,16 @@ export class BaseGrpcService {
     });
   }
 
-  /**
-   * Stop the gRPC server gracefully
-   */
   async stop() {
     return new Promise((resolve) => {
       this.server.tryShutdown(async () => {
-        console.log(`🛑 ${this.serviceName} stopped`);
+        console.log(`${this.serviceName} stopped`);
         await prisma.$disconnect();
         resolve();
       });
     });
   }
 
-  /**
-   * Setup graceful shutdown handlers for SIGINT and SIGTERM
-   */
   setupGracefulShutdown() {
     const shutdown = async (signal) => {
       console.log(`\n${signal} received, shutting down ${this.serviceName}...`);
@@ -74,11 +65,6 @@ export class BaseGrpcService {
     process.on("SIGTERM", () => shutdown("SIGTERM"));
   }
 
-  /**
-   * Wrapper for service methods that handles common error patterns
-   * @param {Function} handler - The actual service implementation function
-   * @returns {Function} - Wrapped handler with error handling
-   */
   static wrapHandler(handler) {
     return async (call, callback) => {
       try {
@@ -93,9 +79,6 @@ export class BaseGrpcService {
     };
   }
 
-  /**
-   * Helper method to send gRPC errors with proper status codes
-   */
   static sendError(callback, code, message) {
     callback({
       code: code,
@@ -103,12 +86,6 @@ export class BaseGrpcService {
     });
   }
 
-  /**
-   * Helper method to validate required fields
-   * @param {Object} data - The data object to validate
-   * @param {Array<string>} requiredFields - Array of required field names
-   * @returns {Object|null} - Returns error object if validation fails, null otherwise
-   */
   static validateRequiredFields(data, requiredFields) {
     const missingFields = requiredFields.filter((field) => !data[field]);
 
