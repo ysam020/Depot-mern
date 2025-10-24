@@ -338,7 +338,7 @@ export const GetProductRequest = {
     },
 };
 function createBaseGetProductResponse() {
-    return { product: undefined };
+    return {};
 }
 export const GetProductResponse = {
     encode(message, writer = new BinaryWriter()) {
@@ -654,7 +654,7 @@ export const CreateProductRequest = {
     },
 };
 function createBaseCreateProductResponse() {
-    return { product: undefined };
+    return {};
 }
 export const CreateProductResponse = {
     encode(message, writer = new BinaryWriter()) {

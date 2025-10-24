@@ -270,7 +270,7 @@ export const AddToCartRequest: MessageFns<AddToCartRequest> = {
 };
 
 function createBaseAddToCartResponse(): AddToCartResponse {
-  return { cart: undefined };
+  return {};
 }
 
 export const AddToCartResponse: MessageFns<AddToCartResponse> = {
@@ -520,7 +520,7 @@ export const DeleteCartRequest: MessageFns<DeleteCartRequest> = {
 };
 
 function createBaseDeleteCartResponse(): DeleteCartResponse {
-  return { cart: undefined };
+  return {};
 }
 
 export const DeleteCartResponse: MessageFns<DeleteCartResponse> = {

@@ -443,7 +443,7 @@ export const GetProductRequest: MessageFns<GetProductRequest> = {
 };
 
 function createBaseGetProductResponse(): GetProductResponse {
-  return { product: undefined };
+  return {};
 }
 
 export const GetProductResponse: MessageFns<GetProductResponse> = {
@@ -786,7 +786,7 @@ export const CreateProductRequest: MessageFns<CreateProductRequest> = {
 };
 
 function createBaseCreateProductResponse(): CreateProductResponse {
-  return { product: undefined };
+  return {};
 }
 
 export const CreateProductResponse: MessageFns<CreateProductResponse> = {

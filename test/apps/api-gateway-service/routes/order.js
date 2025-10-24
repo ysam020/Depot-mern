@@ -4,7 +4,7 @@ import { OrderServiceClient } from "@depot/proto-defs/order";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const router = express.Router();
 const ORDER_SERVICE_ADDRESS = process.env.ORDER_SERVICE_ADDRESS;

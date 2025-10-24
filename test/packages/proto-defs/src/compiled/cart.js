@@ -189,7 +189,7 @@ export const AddToCartRequest = {
     },
 };
 function createBaseAddToCartResponse() {
-    return { cart: undefined };
+    return {};
 }
 export const AddToCartResponse = {
     encode(message, writer = new BinaryWriter()) {
@@ -410,7 +410,7 @@ export const DeleteCartRequest = {
     },
 };
 function createBaseDeleteCartResponse() {
-    return { cart: undefined };
+    return {};
 }
 export const DeleteCartResponse = {
     encode(message, writer = new BinaryWriter()) {

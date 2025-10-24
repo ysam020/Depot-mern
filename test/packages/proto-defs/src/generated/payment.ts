@@ -791,7 +791,6 @@ function createBaseVerifyPaymentRequest(): VerifyPaymentRequest {
     amount: 0,
     user_id: 0,
     cart_items: [],
-    shipping_address: undefined,
   };
 }
 
@@ -952,7 +951,7 @@ export const VerifyPaymentRequest: MessageFns<VerifyPaymentRequest> = {
 };
 
 function createBaseVerifyPaymentResponse(): VerifyPaymentResponse {
-  return { success: false, message: "", payment: undefined };
+  return { success: false, message: "" };
 }
 
 export const VerifyPaymentResponse: MessageFns<VerifyPaymentResponse> = {

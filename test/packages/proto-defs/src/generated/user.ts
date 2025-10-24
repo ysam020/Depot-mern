@@ -268,7 +268,7 @@ export const SignupRequest: MessageFns<SignupRequest> = {
 };
 
 function createBaseSignupResponse(): SignupResponse {
-  return { user: undefined };
+  return {};
 }
 
 export const SignupResponse: MessageFns<SignupResponse> = {
@@ -402,7 +402,7 @@ export const SigninRequest: MessageFns<SigninRequest> = {
 };
 
 function createBaseSigninResponse(): SigninResponse {
-  return { user: undefined, accessToken: "", refreshToken: "" };
+  return { accessToken: "", refreshToken: "" };
 }
 
 export const SigninResponse: MessageFns<SigninResponse> = {

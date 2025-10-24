@@ -346,6 +346,15 @@ const VALID_ORDER_STATUSES = [
   "cancelled",
 ];
 
+// Helper to convert Date to Timestamp format
+function toTimestamp(date) {
+  const milliseconds =
+    date instanceof Date ? date.getTime() : new Date(date).getTime();
+  const seconds = Math.trunc(milliseconds / 1000);
+  const nanos = (milliseconds % 1000) * 1000000;
+  return { seconds, nanos };
+}
+
 class OrderService extends BaseGrpcService {
   constructor() {
     const serviceImpl = {
@@ -374,17 +383,14 @@ class OrderService extends BaseGrpcService {
 
   static formatOrderResponse(order) {
     // Convert JavaScript Date to Timestamp format for protobuf
-    const createdAt =
-      order.created_at instanceof Date
-        ? order.created_at
-        : new Date(order.created_at);
+    const createdAt = toTimestamp(order.created_at);
 
     return {
       id: order.id,
       userId: order.user_id,
       total: order.total,
       status: order.status,
-      createdAt: createdAt, // protobuf will handle Date conversion
+      createdAt: createdAt, // Timestamp with seconds and nanos
       orderItems: order.order_items.map((item) => ({
         id: item.id,
         orderId: item.order_id,
@@ -400,11 +406,22 @@ class OrderService extends BaseGrpcService {
   }
 
   static async createOrder(call, callback) {
+    console.log("📥 Order Service - CreateOrder request received");
+
     const userId = OrderService.getUserId(call.metadata);
     const { items, total, paymentId, shippingAddress } = call.request;
 
+    console.log("📋 Order details:", {
+      userId,
+      itemsCount: items?.length,
+      total,
+      paymentId,
+      hasShippingAddress: !!shippingAddress,
+    });
+
     // Validate items
     if (!items || items.length === 0) {
+      console.error("❌ Order validation failed: No items");
       return BaseGrpcService.sendError(
         callback,
         grpc.status.INVALID_ARGUMENT,
@@ -412,9 +429,12 @@ class OrderService extends BaseGrpcService {
       );
     }
 
+    console.log("✅ Validation passed, creating order in transaction...");
+
     // Create order with order items in a transaction
     const order = await prisma.$transaction(async (tx) => {
       // Create the order
+      console.log("💾 Creating order record...");
       const newOrder = await tx.orders.create({
         data: {
           user_id: userId,
@@ -424,20 +444,31 @@ class OrderService extends BaseGrpcService {
           shipping_address: shippingAddress || "",
         },
       });
+      console.log("✅ Order created:", { orderId: newOrder.id });
 
       // Create order items and update product quantities
+      console.log("📦 Processing order items...");
       const orderItems = await Promise.all(
-        items.map(async (item) => {
+        items.map(async (item, index) => {
+          console.log(`  Processing item ${index + 1}/${items.length}:`, {
+            productId: item.productId,
+            quantity: item.quantity,
+          });
+
           // Fetch product to verify stock
           const product = await tx.products.findUnique({
             where: { id: item.productId },
           });
 
           if (!product) {
+            console.error(`❌ Product not found: ${item.productId}`);
             throw new Error(`Product ${item.productId} not found`);
           }
 
           if (product.qty < item.quantity) {
+            console.error(
+              `❌ Insufficient stock for product ${item.productId}`
+            );
             throw new Error(
               `Insufficient stock for product ${item.productId}. Available: ${product.qty}, Requested: ${item.quantity}`
             );
@@ -467,16 +498,21 @@ class OrderService extends BaseGrpcService {
             data: { qty: product.qty - item.quantity },
           });
 
+          console.log(`  ✅ Item ${index + 1} processed`);
           return orderItem;
         })
       );
 
+      console.log("✅ All order items processed");
+
       // If paymentId is provided, link the payment to this order
       if (paymentId) {
+        console.log("🔗 Linking payment to order...");
         await tx.payments.update({
           where: { id: paymentId },
           data: { order_id: newOrder.id },
         });
+        console.log("✅ Payment linked");
       }
 
       return {
@@ -485,14 +521,23 @@ class OrderService extends BaseGrpcService {
       };
     });
 
-    callback(
-      null,
-      CreateOrderResponse.fromPartial({
-        order: OrderService.formatOrderResponse(order),
-        success: true,
-        message: "Order created successfully",
-      })
-    );
+    console.log("✅ Transaction completed successfully");
+
+    const formattedOrder = OrderService.formatOrderResponse(order);
+
+    const response = CreateOrderResponse.fromPartial({
+      order: formattedOrder,
+      success: true,
+      message: "Order created successfully",
+    });
+
+    console.log("📤 Order Service - Sending CreateOrderResponse:", {
+      orderId: response.order.id,
+      success: response.success,
+      itemsCount: response.order.orderItems?.length,
+    });
+
+    callback(null, response);
   }
 
   static async getOrder(call, callback) {
