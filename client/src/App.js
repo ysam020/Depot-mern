@@ -19,9 +19,13 @@ function App() {
       <div className="content">
         <Routes>
           <Route exact path="/" element={<Home />} />
-          <Route exact path="/product/:productId" element={<ProductDetails />} />
           <Route
             exact
+            path="/product/:productId"
+            element={<ProductDetails />}
+          />
+
+          <Route
             path="/cart"
             element={
               <ProtectedRoute>
@@ -30,7 +34,6 @@ function App() {
             }
           />
           <Route
-            exact
             path="/wishlist"
             element={
               <ProtectedRoute>
@@ -39,7 +42,6 @@ function App() {
             }
           />
           <Route
-            exact
             path="/orders"
             element={
               <ProtectedRoute>
@@ -48,7 +50,6 @@ function App() {
             }
           />
           <Route
-            exact
             path="/orders/:id"
             element={
               <ProtectedRoute>
@@ -57,7 +58,6 @@ function App() {
             }
           />
           <Route
-            exact
             path="/track-order/:id"
             element={
               <ProtectedRoute>
@@ -66,7 +66,6 @@ function App() {
             }
           />
           <Route
-            exact
             path="/checkout"
             element={
               <ProtectedRoute>
@@ -74,6 +73,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route exact path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>

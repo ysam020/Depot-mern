@@ -20,8 +20,6 @@ function Orders() {
     try {
       const response = await apiClient.get("/orders");
 
-      console.log("Orders response:", response.data);
-
       if (response.data.success) {
         setOrders(response.data.data || []);
       }

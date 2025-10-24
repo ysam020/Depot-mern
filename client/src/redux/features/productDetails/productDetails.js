@@ -8,7 +8,6 @@ export const fetchProductDetails = createAsyncThunk(
   async (productId) => {
     const res = await apiClient(`/products/${productId}`);
     const data = res.data.data;
-    console.log(data);
     return data;
   }
 );

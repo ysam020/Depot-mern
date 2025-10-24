@@ -7,8 +7,7 @@ dotenv.config({ quiet: true });
 
 const router = express.Router();
 
-const AUTH_SERVICE_ADDRESS =
-  process.env.AUTH_SERVICE_ADDRESS || "localhost:50051";
+const AUTH_SERVICE_ADDRESS = process.env.AUTH_SERVICE_ADDRESS;
 
 // Initialize gRPC client for Auth Service
 const authClient = new AuthServiceClient(

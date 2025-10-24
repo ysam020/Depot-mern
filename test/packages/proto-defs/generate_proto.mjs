@@ -54,9 +54,9 @@ async function generateProtos() {
     `;
 
     try {
-      console.log(`🧩 Generating types for ${relativePath}...`);
+      console.log(`Generating types for ${relativePath}...`);
       await execAsync(command);
-      console.log(`✅ Successfully generated types for ${relativePath}`);
+      console.log(`Successfully generated types for ${relativePath}`);
     } catch (error) {
       console.error(
         `❌ Error generating ${relativePath}:`,

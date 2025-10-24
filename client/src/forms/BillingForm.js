@@ -38,7 +38,6 @@ function BillingForm(props) {
 
     validationSchema: validationSchema,
     onSubmit: async (address) => {
-      console.log("Form submitted with data:", address);
       props.setPersonalDetails(address);
       props.setBillingFormSubmitted(true);
     },

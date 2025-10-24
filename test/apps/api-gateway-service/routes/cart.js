@@ -24,8 +24,6 @@ function createMetadata(req) {
 // Add to cart
 router.post("/", (req, res) => {
   const { id, quantity = 1 } = req.body;
-  console.log("Adding to cart:", id, quantity);
-
   cartClient.addToCart(
     { id, quantity },
     createMetadata(req),

@@ -6,71 +6,56 @@ import {
   GetProductResponse,
   ListProductsResponse,
 } from "../../dist/product.js";
+import { BaseGrpcService } from "@depot/grpc-utils";
 
-// Implement the service using Prisma
-const productServiceImpl = {
-  getProduct: async (call, callback) => {
-    try {
-      const product = await prisma.products.findUnique({
-        where: { id: call.request.id },
-      });
+class ProductService extends BaseGrpcService {
+  constructor() {
+    const serviceImpl = {
+      getProduct: BaseGrpcService.wrapHandler(ProductService.getProduct),
+      listProducts: BaseGrpcService.wrapHandler(ProductService.listProducts),
+    };
 
-      if (!product) {
-        const response = errorResponse("Product not found");
-        return callback({
-          code: grpc.status.NOT_FOUND,
-          message: response.message,
-        });
-      }
+    super("ProductService", ProductServiceService, serviceImpl, {
+      port: process.env.PRODUCT_SERVICE_PORT || 50052,
+    });
+  }
 
-      const response = successResponse(
-        { product },
-        "Product fetched successfully"
+  static async getProduct(call, callback) {
+    const { id } = call.request;
+
+    const product = await prisma.products.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      return BaseGrpcService.sendError(
+        callback,
+        grpc.status.NOT_FOUND,
+        "Product not found"
       );
-      callback(null, GetProductResponse.fromPartial(response.data));
-    } catch (err) {
-      console.error("❌ GetProduct Error:", err);
-      const response = errorResponse(err.message || "Failed to fetch product");
-      callback({
-        code: grpc.status.INTERNAL,
-        message: response.message,
-      });
     }
-  },
 
-  listProducts: async (call, callback) => {
-    try {
-      const products = await prisma.products.findMany();
+    const response = successResponse(
+      { product },
+      "Product fetched successfully"
+    );
+    callback(null, GetProductResponse.fromPartial(response.data));
+  }
 
-      const response = successResponse(
-        { products },
-        "Products fetched successfully"
-      );
-      callback(null, ListProductsResponse.fromPartial(response.data));
-    } catch (err) {
-      console.error("❌ ListProducts Error:", err);
-      const response = errorResponse(err.message || "Failed to fetch products");
-      callback({
-        code: grpc.status.INTERNAL,
-        message: response.message,
-      });
-    }
-  },
-};
+  static async listProducts(call, callback) {
+    const products = await prisma.products.findMany();
 
-function startServer() {
-  const server = new grpc.Server();
-  server.addService(ProductServiceService, productServiceImpl);
-
-  const PORT = process.env.PRODUCT_SERVICE_PORT;
-  server.bindAsync(
-    `0.0.0.0:${PORT}`,
-    grpc.ServerCredentials.createInsecure(),
-    (err, port) => {
-      if (err) throw err;
-      console.log(`🟢 ProductService running on port ${port}`);
-    }
-  );
+    const response = successResponse(
+      { products },
+      "Products fetched successfully"
+    );
+    callback(null, ListProductsResponse.fromPartial(response.data));
+  }
 }
 
-startServer();
+// Start the server
+const productService = new ProductService();
+productService.start().catch((err) => {
+  console.error("Failed to start ProductService:", err);
+  process.exit(1);
+});

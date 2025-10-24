@@ -6,6 +6,7 @@ import {
   getUserIdFromMetadata,
 } from "./jwt.js";
 import { successResponse, errorResponse } from "./response.js";
+import { BaseGrpcService } from "./baseService.js";
 
 export {
   loadProto,
@@ -15,4 +16,5 @@ export {
   verifyToken,
   successResponse,
   errorResponse,
+  BaseGrpcService,
 };
