@@ -79,16 +79,6 @@ router.post("/verify", (req, res) => {
 
   const user_id = getUserIdFromToken(req);
 
-  console.log("📥 Verify payment request:", {
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature,
-    amount,
-    user_id,
-    cart_items_count: cart_items?.length,
-    shipping_address,
-  });
-
   if (!user_id) {
     return res.status(401).json({
       success: false,
@@ -144,11 +134,6 @@ router.post("/verify", (req, res) => {
       phone: String(shipping_address.phone || ""),
     },
   };
-
-  console.log(
-    "📤 Sending to payment service:",
-    JSON.stringify(verifyPaymentRequest, null, 2)
-  );
 
   paymentClient.verifyPayment(
     verifyPaymentRequest,

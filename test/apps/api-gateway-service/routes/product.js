@@ -18,8 +18,6 @@ router.get("/", (req, res) => {
   const limit = parseInt(req.query.limit) || 100;
   const offset = parseInt(req.query.offset) || 0;
 
-  console.log(`Fetching products - limit: ${limit}, offset: ${offset}`);
-
   productClient.listProducts({ limit, offset }, (err, response) => {
     if (err) {
       console.error("gRPC Error (listProducts):", err);
@@ -40,8 +38,6 @@ router.get("/", (req, res) => {
 // Get product by ID
 router.get("/:id", (req, res) => {
   const id = parseInt(req.params.id, 10);
-
-  console.log(`Fetching product by ID: ${id}`);
 
   productClient.getProduct({ id }, (err, response) => {
     if (err) {

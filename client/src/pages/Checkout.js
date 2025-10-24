@@ -3,7 +3,6 @@ import BillingForm from "../forms/BillingForm";
 import "../styles/checkout.css";
 import { Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import CircularProgress from "@mui/material/CircularProgress";
 import CheckoutSummary from "../components/checkoutComponents/CheckoutSummary";
 import useSelectors from "../customHooks/useSelectors";
 import axios from "axios";
@@ -11,8 +10,7 @@ import axios from "axios";
 function Checkout() {
   const navigate = useNavigate();
   const [personalDetails, setPersonalDetails] = useState();
-  const [billingFormSubmitted, setBillingFormSubmitted] = useState(false);
-  const { cartData, email, savedAddress } = useSelectors();
+  const { cartData, email } = useSelectors();
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
@@ -90,9 +88,6 @@ function Checkout() {
         phone: personalDetails.phone || "", // Add phone field to your form if needed
       };
 
-      console.log("Creating Razorpay order...");
-      console.log("Shipping Address:", shippingAddress);
-
       // Create order on backend
       const { data } = await axios.post(
         "http://localhost:9000/api/v1/payment/create-order",
@@ -108,8 +103,6 @@ function Checkout() {
         }
       );
 
-      console.log("Order created response:", data);
-
       // Handle both response formats
       const orderData = data.data || data;
 
@@ -122,12 +115,6 @@ function Checkout() {
         console.error("No razorpay order ID in response:", data);
         throw new Error("Invalid order response from server");
       }
-
-      console.log("Opening Razorpay with:", {
-        order_id: razorpayOrderId,
-        amount: orderData.amount,
-        key: keyId,
-      });
 
       // Check if Razorpay is loaded
       if (!window.Razorpay) {
@@ -143,9 +130,6 @@ function Checkout() {
         description: "Payment for your order",
         order_id: razorpayOrderId,
         handler: async function (response) {
-          console.log("Payment successful:", response);
-
-          // Verify payment on backend and create order
           try {
             const verifyResponse = await axios.post(
               "http://localhost:9000/api/v1/payment/verify",
@@ -169,8 +153,6 @@ function Checkout() {
                 },
               }
             );
-
-            console.log("Verification response:", verifyResponse.data);
 
             if (verifyResponse.data.success) {
               const orderId =
@@ -215,18 +197,14 @@ function Checkout() {
         },
         modal: {
           ondismiss: function () {
-            console.log("Payment cancelled by user");
             setIsProcessing(false);
             alert("Payment cancelled");
           },
         },
       };
 
-      console.log("Initializing Razorpay...");
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-
-      console.log("Razorpay modal opened");
     } catch (error) {
       console.error("Payment error:", error);
       console.error("Error details:", {
@@ -249,10 +227,7 @@ function Checkout() {
         <Row>
           <Col xs={12} md={6}>
             <h4>BILLING DETAILS</h4>
-            <BillingForm
-              setPersonalDetails={setPersonalDetails}
-              setBillingFormSubmitted={setBillingFormSubmitted}
-            />
+            <BillingForm setPersonalDetails={setPersonalDetails} />
           </Col>
 
           <Col xs={12} md={6}>

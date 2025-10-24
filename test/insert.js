@@ -436,7 +436,7 @@ async function seedProducts() {
       );
     }
 
-    console.log("✅ All products inserted successfully!");
+    console.log("All products inserted successfully!");
   } catch (err) {
     console.error("❌ Error inserting products:", err);
   } finally {

@@ -20,6 +20,7 @@ function TrackOrder() {
   useEffect(() => {
     document.title = `Track Order #${id} - Depot`;
     fetchOrderAndTracking();
+    // eslint-disable-next-line
   }, [id]);
 
   const fetchOrderAndTracking = async () => {

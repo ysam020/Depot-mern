@@ -130,9 +130,6 @@ export const login = createAsyncThunk(
       const data = res.data;
 
       if (data.success) {
-        console.log("logged in");
-
-        // Store BOTH access token and refresh token
         const userData = {
           id: data.user.id,
           name: data.user.name,

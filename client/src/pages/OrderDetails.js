@@ -12,13 +12,13 @@ function OrderDetails() {
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     document.title = `Order #${id} - Depot`;
     fetchOrderDetails();
+    // eslint-disable-next-line
   }, [id]);
 
   const fetchOrderDetails = async () => {
@@ -30,13 +30,6 @@ function OrderDetails() {
       }
     } catch (err) {
       console.error("Error fetching order details:", err);
-      if (err.response?.status === 403) {
-        setError("You don't have permission to view this order");
-      } else if (err.response?.status === 404) {
-        setError("Order not found");
-      } else {
-        setError(err.response?.data?.error || "Failed to fetch order details");
-      }
     } finally {
       setLoading(false);
     }
