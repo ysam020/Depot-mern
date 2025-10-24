@@ -1,6 +1,6 @@
 import express from "express";
 import grpc from "@grpc/grpc-js";
-import { OrderServiceClient } from "../../../dist/order.js";
+import { OrderServiceClient } from "@depot/proto-defs/order";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 

@@ -6,7 +6,8 @@
     "dev": "turbo dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "proto:gen": "turbo run proto:gen"
+    "proto:gen": "turbo run proto:gen",
+    "proto:compile": "turbo run proto:compile"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.51.0",

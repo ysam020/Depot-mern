@@ -3,103 +3,24 @@
 //   protoc-gen-ts_proto  v2.8.1
 //   protoc               v6.32.1
 // source: order.proto
-
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
-import {
-  type CallOptions,
-  type ChannelCredentials,
-  Client,
-  type ClientOptions,
-  type ClientUnaryCall,
-  type handleUnaryCall,
-  makeGenericClientConstructor,
-  type Metadata,
-  type ServiceError,
-  type UntypedServiceImplementation,
-} from "@grpc/grpc-js";
-import { Timestamp } from "./google/protobuf/timestamp";
-
+import { makeGenericClientConstructor } from "@grpc/grpc-js";
+import { Timestamp } from "./google/protobuf/timestamp.js";
 export const protobufPackage = "orders";
-
-/** Order item model */
-export interface OrderItem {
-  id: number;
-  order_id: number;
-  product_id: number;
-  quantity: number;
-  price: number;
-  title: string;
-  image: string;
+function createBaseOrderItem() {
+  return {
+    id: 0,
+    order_id: 0,
+    product_id: 0,
+    quantity: 0,
+    price: 0,
+    title: "",
+    image: "",
+  };
 }
-
-/** Order model */
-export interface Order {
-  id: number;
-  user_id: number;
-  total: number;
-  status: string;
-  created_at?: Date | undefined;
-  order_items: OrderItem[];
-  payment_id: number;
-  shipping_address: string;
-}
-
-/** Request to create an order */
-export interface CreateOrderRequest {
-  user_id: number;
-  items: OrderItem[];
-  total: number;
-  payment_id: number;
-  shipping_address: string;
-}
-
-/** Response after creating an order */
-export interface CreateOrderResponse {
-  order?: Order | undefined;
-  success: boolean;
-  message: string;
-}
-
-/** Request to get order by ID */
-export interface GetOrderRequest {
-  id: number;
-}
-
-/** Response containing an order */
-export interface GetOrderResponse {
-  order?: Order | undefined;
-}
-
-/** Request to list orders by user */
-export interface ListOrdersByUserRequest {
-  user_id: number;
-}
-
-/** Response containing multiple orders */
-export interface ListOrdersByUserResponse {
-  orders: Order[];
-}
-
-/** Request to update order status */
-export interface UpdateOrderStatusRequest {
-  id: number;
-  status: string;
-}
-
-/** Response after updating order status */
-export interface UpdateOrderStatusResponse {
-  order?: Order | undefined;
-  success: boolean;
-  message: string;
-}
-
-function createBaseOrderItem(): OrderItem {
-  return { id: 0, order_id: 0, product_id: 0, quantity: 0, price: 0, title: "", image: "" };
-}
-
-export const OrderItem: MessageFns<OrderItem> = {
-  encode(message: OrderItem, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const OrderItem = {
+  encode(message, writer = new BinaryWriter()) {
     if (message.id !== 0) {
       writer.uint32(8).int32(message.id);
     }
@@ -123,9 +44,9 @@ export const OrderItem: MessageFns<OrderItem> = {
     }
     return writer;
   },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): OrderItem {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(input, length) {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseOrderItem();
     while (reader.pos < end) {
@@ -135,7 +56,6 @@ export const OrderItem: MessageFns<OrderItem> = {
           if (tag !== 8) {
             break;
           }
-
           message.id = reader.int32();
           continue;
         }
@@ -143,7 +63,6 @@ export const OrderItem: MessageFns<OrderItem> = {
           if (tag !== 16) {
             break;
           }
-
           message.order_id = reader.int32();
           continue;
         }
@@ -151,7 +70,6 @@ export const OrderItem: MessageFns<OrderItem> = {
           if (tag !== 24) {
             break;
           }
-
           message.product_id = reader.int32();
           continue;
         }
@@ -159,7 +77,6 @@ export const OrderItem: MessageFns<OrderItem> = {
           if (tag !== 32) {
             break;
           }
-
           message.quantity = reader.int32();
           continue;
         }
@@ -167,7 +84,6 @@ export const OrderItem: MessageFns<OrderItem> = {
           if (tag !== 41) {
             break;
           }
-
           message.price = reader.double();
           continue;
         }
@@ -175,7 +91,6 @@ export const OrderItem: MessageFns<OrderItem> = {
           if (tag !== 50) {
             break;
           }
-
           message.title = reader.string();
           continue;
         }
@@ -183,7 +98,6 @@ export const OrderItem: MessageFns<OrderItem> = {
           if (tag !== 58) {
             break;
           }
-
           message.image = reader.string();
           continue;
         }
@@ -195,21 +109,21 @@ export const OrderItem: MessageFns<OrderItem> = {
     }
     return message;
   },
-
-  fromJSON(object: any): OrderItem {
+  fromJSON(object) {
     return {
       id: isSet(object.id) ? globalThis.Number(object.id) : 0,
       order_id: isSet(object.order_id) ? globalThis.Number(object.order_id) : 0,
-      product_id: isSet(object.product_id) ? globalThis.Number(object.product_id) : 0,
+      product_id: isSet(object.product_id)
+        ? globalThis.Number(object.product_id)
+        : 0,
       quantity: isSet(object.quantity) ? globalThis.Number(object.quantity) : 0,
       price: isSet(object.price) ? globalThis.Number(object.price) : 0,
       title: isSet(object.title) ? globalThis.String(object.title) : "",
       image: isSet(object.image) ? globalThis.String(object.image) : "",
     };
   },
-
-  toJSON(message: OrderItem): unknown {
-    const obj: any = {};
+  toJSON(message) {
+    const obj = {};
     if (message.id !== 0) {
       obj.id = Math.round(message.id);
     }
@@ -233,11 +147,10 @@ export const OrderItem: MessageFns<OrderItem> = {
     }
     return obj;
   },
-
-  create<I extends Exact<DeepPartial<OrderItem>, I>>(base?: I): OrderItem {
-    return OrderItem.fromPartial(base ?? ({} as any));
+  create(base) {
+    return OrderItem.fromPartial(base ?? {});
   },
-  fromPartial<I extends Exact<DeepPartial<OrderItem>, I>>(object: I): OrderItem {
+  fromPartial(object) {
     const message = createBaseOrderItem();
     message.id = object.id ?? 0;
     message.order_id = object.order_id ?? 0;
@@ -249,8 +162,7 @@ export const OrderItem: MessageFns<OrderItem> = {
     return message;
   },
 };
-
-function createBaseOrder(): Order {
+function createBaseOrder() {
   return {
     id: 0,
     user_id: 0,
@@ -262,9 +174,8 @@ function createBaseOrder(): Order {
     shipping_address: "",
   };
 }
-
-export const Order: MessageFns<Order> = {
-  encode(message: Order, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const Order = {
+  encode(message, writer = new BinaryWriter()) {
     if (message.id !== 0) {
       writer.uint32(8).int32(message.id);
     }
@@ -278,10 +189,13 @@ export const Order: MessageFns<Order> = {
       writer.uint32(34).string(message.status);
     }
     if (message.created_at !== undefined) {
-      Timestamp.encode(toTimestamp(message.created_at), writer.uint32(42).fork()).join();
+      Timestamp.encode(
+        toTimestamp(message.created_at),
+        writer.uint32(42).fork()
+      ).join();
     }
     for (const v of message.order_items) {
-      OrderItem.encode(v!, writer.uint32(50).fork()).join();
+      OrderItem.encode(v, writer.uint32(50).fork()).join();
     }
     if (message.payment_id !== 0) {
       writer.uint32(56).int32(message.payment_id);
@@ -291,9 +205,9 @@ export const Order: MessageFns<Order> = {
     }
     return writer;
   },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): Order {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(input, length) {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseOrder();
     while (reader.pos < end) {
@@ -303,7 +217,6 @@ export const Order: MessageFns<Order> = {
           if (tag !== 8) {
             break;
           }
-
           message.id = reader.int32();
           continue;
         }
@@ -311,7 +224,6 @@ export const Order: MessageFns<Order> = {
           if (tag !== 16) {
             break;
           }
-
           message.user_id = reader.int32();
           continue;
         }
@@ -319,7 +231,6 @@ export const Order: MessageFns<Order> = {
           if (tag !== 25) {
             break;
           }
-
           message.total = reader.double();
           continue;
         }
@@ -327,7 +238,6 @@ export const Order: MessageFns<Order> = {
           if (tag !== 34) {
             break;
           }
-
           message.status = reader.string();
           continue;
         }
@@ -335,15 +245,15 @@ export const Order: MessageFns<Order> = {
           if (tag !== 42) {
             break;
           }
-
-          message.created_at = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.created_at = fromTimestamp(
+            Timestamp.decode(reader, reader.uint32())
+          );
           continue;
         }
         case 6: {
           if (tag !== 50) {
             break;
           }
-
           message.order_items.push(OrderItem.decode(reader, reader.uint32()));
           continue;
         }
@@ -351,7 +261,6 @@ export const Order: MessageFns<Order> = {
           if (tag !== 56) {
             break;
           }
-
           message.payment_id = reader.int32();
           continue;
         }
@@ -359,7 +268,6 @@ export const Order: MessageFns<Order> = {
           if (tag !== 66) {
             break;
           }
-
           message.shipping_address = reader.string();
           continue;
         }
@@ -371,24 +279,28 @@ export const Order: MessageFns<Order> = {
     }
     return message;
   },
-
-  fromJSON(object: any): Order {
+  fromJSON(object) {
     return {
       id: isSet(object.id) ? globalThis.Number(object.id) : 0,
       user_id: isSet(object.user_id) ? globalThis.Number(object.user_id) : 0,
       total: isSet(object.total) ? globalThis.Number(object.total) : 0,
       status: isSet(object.status) ? globalThis.String(object.status) : "",
-      created_at: isSet(object.created_at) ? fromJsonTimestamp(object.created_at) : undefined,
+      created_at: isSet(object.created_at)
+        ? fromJsonTimestamp(object.created_at)
+        : undefined,
       order_items: globalThis.Array.isArray(object?.order_items)
-        ? object.order_items.map((e: any) => OrderItem.fromJSON(e))
+        ? object.order_items.map((e) => OrderItem.fromJSON(e))
         : [],
-      payment_id: isSet(object.payment_id) ? globalThis.Number(object.payment_id) : 0,
-      shipping_address: isSet(object.shipping_address) ? globalThis.String(object.shipping_address) : "",
+      payment_id: isSet(object.payment_id)
+        ? globalThis.Number(object.payment_id)
+        : 0,
+      shipping_address: isSet(object.shipping_address)
+        ? globalThis.String(object.shipping_address)
+        : "",
     };
   },
-
-  toJSON(message: Order): unknown {
-    const obj: any = {};
+  toJSON(message) {
+    const obj = {};
     if (message.id !== 0) {
       obj.id = Math.round(message.id);
     }
@@ -415,35 +327,39 @@ export const Order: MessageFns<Order> = {
     }
     return obj;
   },
-
-  create<I extends Exact<DeepPartial<Order>, I>>(base?: I): Order {
-    return Order.fromPartial(base ?? ({} as any));
+  create(base) {
+    return Order.fromPartial(base ?? {});
   },
-  fromPartial<I extends Exact<DeepPartial<Order>, I>>(object: I): Order {
+  fromPartial(object) {
     const message = createBaseOrder();
     message.id = object.id ?? 0;
     message.user_id = object.user_id ?? 0;
     message.total = object.total ?? 0;
     message.status = object.status ?? "";
     message.created_at = object.created_at ?? undefined;
-    message.order_items = object.order_items?.map((e) => OrderItem.fromPartial(e)) || [];
+    message.order_items =
+      object.order_items?.map((e) => OrderItem.fromPartial(e)) || [];
     message.payment_id = object.payment_id ?? 0;
     message.shipping_address = object.shipping_address ?? "";
     return message;
   },
 };
-
-function createBaseCreateOrderRequest(): CreateOrderRequest {
-  return { user_id: 0, items: [], total: 0, payment_id: 0, shipping_address: "" };
+function createBaseCreateOrderRequest() {
+  return {
+    user_id: 0,
+    items: [],
+    total: 0,
+    payment_id: 0,
+    shipping_address: "",
+  };
 }
-
-export const CreateOrderRequest: MessageFns<CreateOrderRequest> = {
-  encode(message: CreateOrderRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const CreateOrderRequest = {
+  encode(message, writer = new BinaryWriter()) {
     if (message.user_id !== 0) {
       writer.uint32(8).int32(message.user_id);
     }
     for (const v of message.items) {
-      OrderItem.encode(v!, writer.uint32(18).fork()).join();
+      OrderItem.encode(v, writer.uint32(18).fork()).join();
     }
     if (message.total !== 0) {
       writer.uint32(25).double(message.total);
@@ -456,9 +372,9 @@ export const CreateOrderRequest: MessageFns<CreateOrderRequest> = {
     }
     return writer;
   },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): CreateOrderRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(input, length) {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseCreateOrderRequest();
     while (reader.pos < end) {
@@ -468,7 +384,6 @@ export const CreateOrderRequest: MessageFns<CreateOrderRequest> = {
           if (tag !== 8) {
             break;
           }
-
           message.user_id = reader.int32();
           continue;
         }
@@ -476,7 +391,6 @@ export const CreateOrderRequest: MessageFns<CreateOrderRequest> = {
           if (tag !== 18) {
             break;
           }
-
           message.items.push(OrderItem.decode(reader, reader.uint32()));
           continue;
         }
@@ -484,7 +398,6 @@ export const CreateOrderRequest: MessageFns<CreateOrderRequest> = {
           if (tag !== 25) {
             break;
           }
-
           message.total = reader.double();
           continue;
         }
@@ -492,7 +405,6 @@ export const CreateOrderRequest: MessageFns<CreateOrderRequest> = {
           if (tag !== 32) {
             break;
           }
-
           message.payment_id = reader.int32();
           continue;
         }
@@ -500,7 +412,6 @@ export const CreateOrderRequest: MessageFns<CreateOrderRequest> = {
           if (tag !== 42) {
             break;
           }
-
           message.shipping_address = reader.string();
           continue;
         }
@@ -512,19 +423,23 @@ export const CreateOrderRequest: MessageFns<CreateOrderRequest> = {
     }
     return message;
   },
-
-  fromJSON(object: any): CreateOrderRequest {
+  fromJSON(object) {
     return {
       user_id: isSet(object.user_id) ? globalThis.Number(object.user_id) : 0,
-      items: globalThis.Array.isArray(object?.items) ? object.items.map((e: any) => OrderItem.fromJSON(e)) : [],
+      items: globalThis.Array.isArray(object?.items)
+        ? object.items.map((e) => OrderItem.fromJSON(e))
+        : [],
       total: isSet(object.total) ? globalThis.Number(object.total) : 0,
-      payment_id: isSet(object.payment_id) ? globalThis.Number(object.payment_id) : 0,
-      shipping_address: isSet(object.shipping_address) ? globalThis.String(object.shipping_address) : "",
+      payment_id: isSet(object.payment_id)
+        ? globalThis.Number(object.payment_id)
+        : 0,
+      shipping_address: isSet(object.shipping_address)
+        ? globalThis.String(object.shipping_address)
+        : "",
     };
   },
-
-  toJSON(message: CreateOrderRequest): unknown {
-    const obj: any = {};
+  toJSON(message) {
+    const obj = {};
     if (message.user_id !== 0) {
       obj.user_id = Math.round(message.user_id);
     }
@@ -542,11 +457,10 @@ export const CreateOrderRequest: MessageFns<CreateOrderRequest> = {
     }
     return obj;
   },
-
-  create<I extends Exact<DeepPartial<CreateOrderRequest>, I>>(base?: I): CreateOrderRequest {
-    return CreateOrderRequest.fromPartial(base ?? ({} as any));
+  create(base) {
+    return CreateOrderRequest.fromPartial(base ?? {});
   },
-  fromPartial<I extends Exact<DeepPartial<CreateOrderRequest>, I>>(object: I): CreateOrderRequest {
+  fromPartial(object) {
     const message = createBaseCreateOrderRequest();
     message.user_id = object.user_id ?? 0;
     message.items = object.items?.map((e) => OrderItem.fromPartial(e)) || [];
@@ -556,13 +470,11 @@ export const CreateOrderRequest: MessageFns<CreateOrderRequest> = {
     return message;
   },
 };
-
-function createBaseCreateOrderResponse(): CreateOrderResponse {
+function createBaseCreateOrderResponse() {
   return { order: undefined, success: false, message: "" };
 }
-
-export const CreateOrderResponse: MessageFns<CreateOrderResponse> = {
-  encode(message: CreateOrderResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const CreateOrderResponse = {
+  encode(message, writer = new BinaryWriter()) {
     if (message.order !== undefined) {
       Order.encode(message.order, writer.uint32(10).fork()).join();
     }
@@ -574,9 +486,9 @@ export const CreateOrderResponse: MessageFns<CreateOrderResponse> = {
     }
     return writer;
   },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): CreateOrderResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(input, length) {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseCreateOrderResponse();
     while (reader.pos < end) {
@@ -586,7 +498,6 @@ export const CreateOrderResponse: MessageFns<CreateOrderResponse> = {
           if (tag !== 10) {
             break;
           }
-
           message.order = Order.decode(reader, reader.uint32());
           continue;
         }
@@ -594,7 +505,6 @@ export const CreateOrderResponse: MessageFns<CreateOrderResponse> = {
           if (tag !== 16) {
             break;
           }
-
           message.success = reader.bool();
           continue;
         }
@@ -602,7 +512,6 @@ export const CreateOrderResponse: MessageFns<CreateOrderResponse> = {
           if (tag !== 26) {
             break;
           }
-
           message.message = reader.string();
           continue;
         }
@@ -614,17 +523,17 @@ export const CreateOrderResponse: MessageFns<CreateOrderResponse> = {
     }
     return message;
   },
-
-  fromJSON(object: any): CreateOrderResponse {
+  fromJSON(object) {
     return {
       order: isSet(object.order) ? Order.fromJSON(object.order) : undefined,
-      success: isSet(object.success) ? globalThis.Boolean(object.success) : false,
+      success: isSet(object.success)
+        ? globalThis.Boolean(object.success)
+        : false,
       message: isSet(object.message) ? globalThis.String(object.message) : "",
     };
   },
-
-  toJSON(message: CreateOrderResponse): unknown {
-    const obj: any = {};
+  toJSON(message) {
+    const obj = {};
     if (message.order !== undefined) {
       obj.order = Order.toJSON(message.order);
     }
@@ -636,33 +545,33 @@ export const CreateOrderResponse: MessageFns<CreateOrderResponse> = {
     }
     return obj;
   },
-
-  create<I extends Exact<DeepPartial<CreateOrderResponse>, I>>(base?: I): CreateOrderResponse {
-    return CreateOrderResponse.fromPartial(base ?? ({} as any));
+  create(base) {
+    return CreateOrderResponse.fromPartial(base ?? {});
   },
-  fromPartial<I extends Exact<DeepPartial<CreateOrderResponse>, I>>(object: I): CreateOrderResponse {
+  fromPartial(object) {
     const message = createBaseCreateOrderResponse();
-    message.order = (object.order !== undefined && object.order !== null) ? Order.fromPartial(object.order) : undefined;
+    message.order =
+      object.order !== undefined && object.order !== null
+        ? Order.fromPartial(object.order)
+        : undefined;
     message.success = object.success ?? false;
     message.message = object.message ?? "";
     return message;
   },
 };
-
-function createBaseGetOrderRequest(): GetOrderRequest {
+function createBaseGetOrderRequest() {
   return { id: 0 };
 }
-
-export const GetOrderRequest: MessageFns<GetOrderRequest> = {
-  encode(message: GetOrderRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const GetOrderRequest = {
+  encode(message, writer = new BinaryWriter()) {
     if (message.id !== 0) {
       writer.uint32(8).int32(message.id);
     }
     return writer;
   },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): GetOrderRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(input, length) {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseGetOrderRequest();
     while (reader.pos < end) {
@@ -672,7 +581,6 @@ export const GetOrderRequest: MessageFns<GetOrderRequest> = {
           if (tag !== 8) {
             break;
           }
-
           message.id = reader.int32();
           continue;
         }
@@ -684,43 +592,38 @@ export const GetOrderRequest: MessageFns<GetOrderRequest> = {
     }
     return message;
   },
-
-  fromJSON(object: any): GetOrderRequest {
+  fromJSON(object) {
     return { id: isSet(object.id) ? globalThis.Number(object.id) : 0 };
   },
-
-  toJSON(message: GetOrderRequest): unknown {
-    const obj: any = {};
+  toJSON(message) {
+    const obj = {};
     if (message.id !== 0) {
       obj.id = Math.round(message.id);
     }
     return obj;
   },
-
-  create<I extends Exact<DeepPartial<GetOrderRequest>, I>>(base?: I): GetOrderRequest {
-    return GetOrderRequest.fromPartial(base ?? ({} as any));
+  create(base) {
+    return GetOrderRequest.fromPartial(base ?? {});
   },
-  fromPartial<I extends Exact<DeepPartial<GetOrderRequest>, I>>(object: I): GetOrderRequest {
+  fromPartial(object) {
     const message = createBaseGetOrderRequest();
     message.id = object.id ?? 0;
     return message;
   },
 };
-
-function createBaseGetOrderResponse(): GetOrderResponse {
+function createBaseGetOrderResponse() {
   return { order: undefined };
 }
-
-export const GetOrderResponse: MessageFns<GetOrderResponse> = {
-  encode(message: GetOrderResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const GetOrderResponse = {
+  encode(message, writer = new BinaryWriter()) {
     if (message.order !== undefined) {
       Order.encode(message.order, writer.uint32(10).fork()).join();
     }
     return writer;
   },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): GetOrderResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(input, length) {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseGetOrderResponse();
     while (reader.pos < end) {
@@ -730,7 +633,6 @@ export const GetOrderResponse: MessageFns<GetOrderResponse> = {
           if (tag !== 10) {
             break;
           }
-
           message.order = Order.decode(reader, reader.uint32());
           continue;
         }
@@ -742,43 +644,43 @@ export const GetOrderResponse: MessageFns<GetOrderResponse> = {
     }
     return message;
   },
-
-  fromJSON(object: any): GetOrderResponse {
-    return { order: isSet(object.order) ? Order.fromJSON(object.order) : undefined };
+  fromJSON(object) {
+    return {
+      order: isSet(object.order) ? Order.fromJSON(object.order) : undefined,
+    };
   },
-
-  toJSON(message: GetOrderResponse): unknown {
-    const obj: any = {};
+  toJSON(message) {
+    const obj = {};
     if (message.order !== undefined) {
       obj.order = Order.toJSON(message.order);
     }
     return obj;
   },
-
-  create<I extends Exact<DeepPartial<GetOrderResponse>, I>>(base?: I): GetOrderResponse {
-    return GetOrderResponse.fromPartial(base ?? ({} as any));
+  create(base) {
+    return GetOrderResponse.fromPartial(base ?? {});
   },
-  fromPartial<I extends Exact<DeepPartial<GetOrderResponse>, I>>(object: I): GetOrderResponse {
+  fromPartial(object) {
     const message = createBaseGetOrderResponse();
-    message.order = (object.order !== undefined && object.order !== null) ? Order.fromPartial(object.order) : undefined;
+    message.order =
+      object.order !== undefined && object.order !== null
+        ? Order.fromPartial(object.order)
+        : undefined;
     return message;
   },
 };
-
-function createBaseListOrdersByUserRequest(): ListOrdersByUserRequest {
+function createBaseListOrdersByUserRequest() {
   return { user_id: 0 };
 }
-
-export const ListOrdersByUserRequest: MessageFns<ListOrdersByUserRequest> = {
-  encode(message: ListOrdersByUserRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const ListOrdersByUserRequest = {
+  encode(message, writer = new BinaryWriter()) {
     if (message.user_id !== 0) {
       writer.uint32(8).int32(message.user_id);
     }
     return writer;
   },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): ListOrdersByUserRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(input, length) {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseListOrdersByUserRequest();
     while (reader.pos < end) {
@@ -788,7 +690,6 @@ export const ListOrdersByUserRequest: MessageFns<ListOrdersByUserRequest> = {
           if (tag !== 8) {
             break;
           }
-
           message.user_id = reader.int32();
           continue;
         }
@@ -800,43 +701,40 @@ export const ListOrdersByUserRequest: MessageFns<ListOrdersByUserRequest> = {
     }
     return message;
   },
-
-  fromJSON(object: any): ListOrdersByUserRequest {
-    return { user_id: isSet(object.user_id) ? globalThis.Number(object.user_id) : 0 };
+  fromJSON(object) {
+    return {
+      user_id: isSet(object.user_id) ? globalThis.Number(object.user_id) : 0,
+    };
   },
-
-  toJSON(message: ListOrdersByUserRequest): unknown {
-    const obj: any = {};
+  toJSON(message) {
+    const obj = {};
     if (message.user_id !== 0) {
       obj.user_id = Math.round(message.user_id);
     }
     return obj;
   },
-
-  create<I extends Exact<DeepPartial<ListOrdersByUserRequest>, I>>(base?: I): ListOrdersByUserRequest {
-    return ListOrdersByUserRequest.fromPartial(base ?? ({} as any));
+  create(base) {
+    return ListOrdersByUserRequest.fromPartial(base ?? {});
   },
-  fromPartial<I extends Exact<DeepPartial<ListOrdersByUserRequest>, I>>(object: I): ListOrdersByUserRequest {
+  fromPartial(object) {
     const message = createBaseListOrdersByUserRequest();
     message.user_id = object.user_id ?? 0;
     return message;
   },
 };
-
-function createBaseListOrdersByUserResponse(): ListOrdersByUserResponse {
+function createBaseListOrdersByUserResponse() {
   return { orders: [] };
 }
-
-export const ListOrdersByUserResponse: MessageFns<ListOrdersByUserResponse> = {
-  encode(message: ListOrdersByUserResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const ListOrdersByUserResponse = {
+  encode(message, writer = new BinaryWriter()) {
     for (const v of message.orders) {
-      Order.encode(v!, writer.uint32(10).fork()).join();
+      Order.encode(v, writer.uint32(10).fork()).join();
     }
     return writer;
   },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): ListOrdersByUserResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(input, length) {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseListOrdersByUserResponse();
     while (reader.pos < end) {
@@ -846,7 +744,6 @@ export const ListOrdersByUserResponse: MessageFns<ListOrdersByUserResponse> = {
           if (tag !== 10) {
             break;
           }
-
           message.orders.push(Order.decode(reader, reader.uint32()));
           continue;
         }
@@ -858,35 +755,34 @@ export const ListOrdersByUserResponse: MessageFns<ListOrdersByUserResponse> = {
     }
     return message;
   },
-
-  fromJSON(object: any): ListOrdersByUserResponse {
-    return { orders: globalThis.Array.isArray(object?.orders) ? object.orders.map((e: any) => Order.fromJSON(e)) : [] };
+  fromJSON(object) {
+    return {
+      orders: globalThis.Array.isArray(object?.orders)
+        ? object.orders.map((e) => Order.fromJSON(e))
+        : [],
+    };
   },
-
-  toJSON(message: ListOrdersByUserResponse): unknown {
-    const obj: any = {};
+  toJSON(message) {
+    const obj = {};
     if (message.orders?.length) {
       obj.orders = message.orders.map((e) => Order.toJSON(e));
     }
     return obj;
   },
-
-  create<I extends Exact<DeepPartial<ListOrdersByUserResponse>, I>>(base?: I): ListOrdersByUserResponse {
-    return ListOrdersByUserResponse.fromPartial(base ?? ({} as any));
+  create(base) {
+    return ListOrdersByUserResponse.fromPartial(base ?? {});
   },
-  fromPartial<I extends Exact<DeepPartial<ListOrdersByUserResponse>, I>>(object: I): ListOrdersByUserResponse {
+  fromPartial(object) {
     const message = createBaseListOrdersByUserResponse();
     message.orders = object.orders?.map((e) => Order.fromPartial(e)) || [];
     return message;
   },
 };
-
-function createBaseUpdateOrderStatusRequest(): UpdateOrderStatusRequest {
+function createBaseUpdateOrderStatusRequest() {
   return { id: 0, status: "" };
 }
-
-export const UpdateOrderStatusRequest: MessageFns<UpdateOrderStatusRequest> = {
-  encode(message: UpdateOrderStatusRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const UpdateOrderStatusRequest = {
+  encode(message, writer = new BinaryWriter()) {
     if (message.id !== 0) {
       writer.uint32(8).int32(message.id);
     }
@@ -895,9 +791,9 @@ export const UpdateOrderStatusRequest: MessageFns<UpdateOrderStatusRequest> = {
     }
     return writer;
   },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): UpdateOrderStatusRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(input, length) {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseUpdateOrderStatusRequest();
     while (reader.pos < end) {
@@ -907,7 +803,6 @@ export const UpdateOrderStatusRequest: MessageFns<UpdateOrderStatusRequest> = {
           if (tag !== 8) {
             break;
           }
-
           message.id = reader.int32();
           continue;
         }
@@ -915,7 +810,6 @@ export const UpdateOrderStatusRequest: MessageFns<UpdateOrderStatusRequest> = {
           if (tag !== 18) {
             break;
           }
-
           message.status = reader.string();
           continue;
         }
@@ -927,16 +821,14 @@ export const UpdateOrderStatusRequest: MessageFns<UpdateOrderStatusRequest> = {
     }
     return message;
   },
-
-  fromJSON(object: any): UpdateOrderStatusRequest {
+  fromJSON(object) {
     return {
       id: isSet(object.id) ? globalThis.Number(object.id) : 0,
       status: isSet(object.status) ? globalThis.String(object.status) : "",
     };
   },
-
-  toJSON(message: UpdateOrderStatusRequest): unknown {
-    const obj: any = {};
+  toJSON(message) {
+    const obj = {};
     if (message.id !== 0) {
       obj.id = Math.round(message.id);
     }
@@ -945,24 +837,21 @@ export const UpdateOrderStatusRequest: MessageFns<UpdateOrderStatusRequest> = {
     }
     return obj;
   },
-
-  create<I extends Exact<DeepPartial<UpdateOrderStatusRequest>, I>>(base?: I): UpdateOrderStatusRequest {
-    return UpdateOrderStatusRequest.fromPartial(base ?? ({} as any));
+  create(base) {
+    return UpdateOrderStatusRequest.fromPartial(base ?? {});
   },
-  fromPartial<I extends Exact<DeepPartial<UpdateOrderStatusRequest>, I>>(object: I): UpdateOrderStatusRequest {
+  fromPartial(object) {
     const message = createBaseUpdateOrderStatusRequest();
     message.id = object.id ?? 0;
     message.status = object.status ?? "";
     return message;
   },
 };
-
-function createBaseUpdateOrderStatusResponse(): UpdateOrderStatusResponse {
+function createBaseUpdateOrderStatusResponse() {
   return { order: undefined, success: false, message: "" };
 }
-
-export const UpdateOrderStatusResponse: MessageFns<UpdateOrderStatusResponse> = {
-  encode(message: UpdateOrderStatusResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const UpdateOrderStatusResponse = {
+  encode(message, writer = new BinaryWriter()) {
     if (message.order !== undefined) {
       Order.encode(message.order, writer.uint32(10).fork()).join();
     }
@@ -974,9 +863,9 @@ export const UpdateOrderStatusResponse: MessageFns<UpdateOrderStatusResponse> = 
     }
     return writer;
   },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): UpdateOrderStatusResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+  decode(input, length) {
+    const reader =
+      input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseUpdateOrderStatusResponse();
     while (reader.pos < end) {
@@ -986,7 +875,6 @@ export const UpdateOrderStatusResponse: MessageFns<UpdateOrderStatusResponse> = 
           if (tag !== 10) {
             break;
           }
-
           message.order = Order.decode(reader, reader.uint32());
           continue;
         }
@@ -994,7 +882,6 @@ export const UpdateOrderStatusResponse: MessageFns<UpdateOrderStatusResponse> = 
           if (tag !== 16) {
             break;
           }
-
           message.success = reader.bool();
           continue;
         }
@@ -1002,7 +889,6 @@ export const UpdateOrderStatusResponse: MessageFns<UpdateOrderStatusResponse> = 
           if (tag !== 26) {
             break;
           }
-
           message.message = reader.string();
           continue;
         }
@@ -1014,17 +900,17 @@ export const UpdateOrderStatusResponse: MessageFns<UpdateOrderStatusResponse> = 
     }
     return message;
   },
-
-  fromJSON(object: any): UpdateOrderStatusResponse {
+  fromJSON(object) {
     return {
       order: isSet(object.order) ? Order.fromJSON(object.order) : undefined,
-      success: isSet(object.success) ? globalThis.Boolean(object.success) : false,
+      success: isSet(object.success)
+        ? globalThis.Boolean(object.success)
+        : false,
       message: isSet(object.message) ? globalThis.String(object.message) : "",
     };
   },
-
-  toJSON(message: UpdateOrderStatusResponse): unknown {
-    const obj: any = {};
+  toJSON(message) {
+    const obj = {};
     if (message.order !== undefined) {
       obj.order = Order.toJSON(message.order);
     }
@@ -1036,168 +922,81 @@ export const UpdateOrderStatusResponse: MessageFns<UpdateOrderStatusResponse> = 
     }
     return obj;
   },
-
-  create<I extends Exact<DeepPartial<UpdateOrderStatusResponse>, I>>(base?: I): UpdateOrderStatusResponse {
-    return UpdateOrderStatusResponse.fromPartial(base ?? ({} as any));
+  create(base) {
+    return UpdateOrderStatusResponse.fromPartial(base ?? {});
   },
-  fromPartial<I extends Exact<DeepPartial<UpdateOrderStatusResponse>, I>>(object: I): UpdateOrderStatusResponse {
+  fromPartial(object) {
     const message = createBaseUpdateOrderStatusResponse();
-    message.order = (object.order !== undefined && object.order !== null) ? Order.fromPartial(object.order) : undefined;
+    message.order =
+      object.order !== undefined && object.order !== null
+        ? Order.fromPartial(object.order)
+        : undefined;
     message.success = object.success ?? false;
     message.message = object.message ?? "";
     return message;
   },
 };
-
-/** Order Service definition */
-export type OrderServiceService = typeof OrderServiceService;
 export const OrderServiceService = {
   createOrder: {
     path: "/orders.OrderService/CreateOrder",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: CreateOrderRequest): Buffer => Buffer.from(CreateOrderRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): CreateOrderRequest => CreateOrderRequest.decode(value),
-    responseSerialize: (value: CreateOrderResponse): Buffer => Buffer.from(CreateOrderResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): CreateOrderResponse => CreateOrderResponse.decode(value),
+    requestSerialize: (value) =>
+      Buffer.from(CreateOrderRequest.encode(value).finish()),
+    requestDeserialize: (value) => CreateOrderRequest.decode(value),
+    responseSerialize: (value) =>
+      Buffer.from(CreateOrderResponse.encode(value).finish()),
+    responseDeserialize: (value) => CreateOrderResponse.decode(value),
   },
   getOrder: {
     path: "/orders.OrderService/GetOrder",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: GetOrderRequest): Buffer => Buffer.from(GetOrderRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): GetOrderRequest => GetOrderRequest.decode(value),
-    responseSerialize: (value: GetOrderResponse): Buffer => Buffer.from(GetOrderResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): GetOrderResponse => GetOrderResponse.decode(value),
+    requestSerialize: (value) =>
+      Buffer.from(GetOrderRequest.encode(value).finish()),
+    requestDeserialize: (value) => GetOrderRequest.decode(value),
+    responseSerialize: (value) =>
+      Buffer.from(GetOrderResponse.encode(value).finish()),
+    responseDeserialize: (value) => GetOrderResponse.decode(value),
   },
   listOrdersByUser: {
     path: "/orders.OrderService/ListOrdersByUser",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: ListOrdersByUserRequest): Buffer =>
+    requestSerialize: (value) =>
       Buffer.from(ListOrdersByUserRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): ListOrdersByUserRequest => ListOrdersByUserRequest.decode(value),
-    responseSerialize: (value: ListOrdersByUserResponse): Buffer =>
+    requestDeserialize: (value) => ListOrdersByUserRequest.decode(value),
+    responseSerialize: (value) =>
       Buffer.from(ListOrdersByUserResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): ListOrdersByUserResponse => ListOrdersByUserResponse.decode(value),
+    responseDeserialize: (value) => ListOrdersByUserResponse.decode(value),
   },
   updateOrderStatus: {
     path: "/orders.OrderService/UpdateOrderStatus",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: UpdateOrderStatusRequest): Buffer =>
+    requestSerialize: (value) =>
       Buffer.from(UpdateOrderStatusRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): UpdateOrderStatusRequest => UpdateOrderStatusRequest.decode(value),
-    responseSerialize: (value: UpdateOrderStatusResponse): Buffer =>
+    requestDeserialize: (value) => UpdateOrderStatusRequest.decode(value),
+    responseSerialize: (value) =>
       Buffer.from(UpdateOrderStatusResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): UpdateOrderStatusResponse => UpdateOrderStatusResponse.decode(value),
+    responseDeserialize: (value) => UpdateOrderStatusResponse.decode(value),
   },
-} as const;
-
-export interface OrderServiceServer extends UntypedServiceImplementation {
-  createOrder: handleUnaryCall<CreateOrderRequest, CreateOrderResponse>;
-  getOrder: handleUnaryCall<GetOrderRequest, GetOrderResponse>;
-  listOrdersByUser: handleUnaryCall<ListOrdersByUserRequest, ListOrdersByUserResponse>;
-  updateOrderStatus: handleUnaryCall<UpdateOrderStatusRequest, UpdateOrderStatusResponse>;
-}
-
-export interface OrderServiceClient extends Client {
-  createOrder(
-    request: CreateOrderRequest,
-    callback: (error: ServiceError | null, response: CreateOrderResponse) => void,
-  ): ClientUnaryCall;
-  createOrder(
-    request: CreateOrderRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: CreateOrderResponse) => void,
-  ): ClientUnaryCall;
-  createOrder(
-    request: CreateOrderRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: CreateOrderResponse) => void,
-  ): ClientUnaryCall;
-  getOrder(
-    request: GetOrderRequest,
-    callback: (error: ServiceError | null, response: GetOrderResponse) => void,
-  ): ClientUnaryCall;
-  getOrder(
-    request: GetOrderRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: GetOrderResponse) => void,
-  ): ClientUnaryCall;
-  getOrder(
-    request: GetOrderRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: GetOrderResponse) => void,
-  ): ClientUnaryCall;
-  listOrdersByUser(
-    request: ListOrdersByUserRequest,
-    callback: (error: ServiceError | null, response: ListOrdersByUserResponse) => void,
-  ): ClientUnaryCall;
-  listOrdersByUser(
-    request: ListOrdersByUserRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: ListOrdersByUserResponse) => void,
-  ): ClientUnaryCall;
-  listOrdersByUser(
-    request: ListOrdersByUserRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: ListOrdersByUserResponse) => void,
-  ): ClientUnaryCall;
-  updateOrderStatus(
-    request: UpdateOrderStatusRequest,
-    callback: (error: ServiceError | null, response: UpdateOrderStatusResponse) => void,
-  ): ClientUnaryCall;
-  updateOrderStatus(
-    request: UpdateOrderStatusRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: UpdateOrderStatusResponse) => void,
-  ): ClientUnaryCall;
-  updateOrderStatus(
-    request: UpdateOrderStatusRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: UpdateOrderStatusResponse) => void,
-  ): ClientUnaryCall;
-}
-
+};
 export const OrderServiceClient = makeGenericClientConstructor(
   OrderServiceService,
-  "orders.OrderService",
-) as unknown as {
-  new (address: string, credentials: ChannelCredentials, options?: Partial<ClientOptions>): OrderServiceClient;
-  service: typeof OrderServiceService;
-  serviceName: string;
-};
-
-type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
-
-export type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
-
-type KeysOfUnion<T> = T extends T ? keyof T : never;
-export type Exact<P, I extends P> = P extends Builtin ? P
-  : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
-
-function toTimestamp(date: Date): Timestamp {
-  const seconds = Math.trunc(date.getTime() / 1_000);
-  const nanos = (date.getTime() % 1_000) * 1_000_000;
+  "orders.OrderService"
+);
+function toTimestamp(date) {
+  const seconds = Math.trunc(date.getTime() / 1000);
+  const nanos = (date.getTime() % 1000) * 1000000;
   return { seconds, nanos };
 }
-
-function fromTimestamp(t: Timestamp): Date {
-  let millis = (t.seconds || 0) * 1_000;
-  millis += (t.nanos || 0) / 1_000_000;
+function fromTimestamp(t) {
+  let millis = (t.seconds || 0) * 1000;
+  millis += (t.nanos || 0) / 1000000;
   return new globalThis.Date(millis);
 }
-
-function fromJsonTimestamp(o: any): Date {
+function fromJsonTimestamp(o) {
   if (o instanceof globalThis.Date) {
     return o;
   } else if (typeof o === "string") {
@@ -1206,16 +1005,7 @@ function fromJsonTimestamp(o: any): Date {
     return fromTimestamp(Timestamp.fromJSON(o));
   }
 }
-
-function isSet(value: any): boolean {
+function isSet(value) {
   return value !== null && value !== undefined;
 }
-
-export interface MessageFns<T> {
-  encode(message: T, writer?: BinaryWriter): BinaryWriter;
-  decode(input: BinaryReader | Uint8Array, length?: number): T;
-  fromJSON(object: any): T;
-  toJSON(message: T): unknown;
-  create<I extends Exact<DeepPartial<T>, I>>(base?: I): T;
-  fromPartial<I extends Exact<DeepPartial<T>, I>>(object: I): T;
-}
+//# sourceMappingURL=order.js.map

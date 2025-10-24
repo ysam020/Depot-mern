@@ -11,7 +11,7 @@ import {
   RemoveFromWishlistResponse,
   GetWishlistResponse,
   Wishlist as WishlistMessage,
-} from "../../dist/wishlist.js";
+} from "@depot/proto-defs/wishlist";
 import dotenv from "dotenv";
 import { BaseGrpcService } from "@depot/grpc-utils";
 

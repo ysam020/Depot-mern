@@ -1,7 +1,7 @@
 import express from "express";
 import grpc from "@grpc/grpc-js";
 import jwt from "jsonwebtoken";
-import { PaymentServiceClient } from "../../../dist/payment.js";
+import { PaymentServiceClient } from "@depot/proto-defs/payment";
 import dotenv from "dotenv";
 
 dotenv.config();

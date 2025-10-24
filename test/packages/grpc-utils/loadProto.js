@@ -14,7 +14,7 @@
 //   return grpc.loadPackageDefinition(packageDef);
 // };
 
-// packages/grpc-utils/loadProto.js (already exists, but let's verify)
+// packages/grpc-utils/loadProto.js
 import grpc from "@grpc/grpc-js";
 import protoLoader from "@grpc/proto-loader";
 import path from "path";
@@ -22,18 +22,25 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const loadProto = (serviceName) => {
+export const loadProto = (protoName) => {
+  // ✅ Correct path structure
   const protoPath = path.resolve(
     __dirname,
-    `../proto-defs/${serviceName}.proto`
+    `../proto-defs/src/proto/${protoName}.proto` // ✅ /src/proto/
+  );
+
+  const protoDir = path.resolve(
+    __dirname,
+    "../proto-defs/src/proto" // ✅ /src/proto/
   );
 
   const packageDef = protoLoader.loadSync(protoPath, {
-    keepCase: true, // ✅ Keep snake_case
+    keepCase: true,
     longs: String,
     enums: String,
     defaults: true,
     oneofs: true,
+    includeDirs: [protoDir],
   });
 
   return grpc.loadPackageDefinition(packageDef);
