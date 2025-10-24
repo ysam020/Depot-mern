@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Container, Row, Col, Card } from "react-bootstrap";
+import { Container, Row, Col, Card, Modal, Button } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import CancelIcon from "@mui/icons-material/Cancel";
 import "../styles/orderDetails.css";
 import apiClient from "../config/axiosConfig";
 
@@ -13,6 +13,8 @@ function OrderDetails() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     document.title = `Order #${id} - Depot`;
@@ -22,8 +24,6 @@ function OrderDetails() {
   const fetchOrderDetails = async () => {
     try {
       const response = await apiClient.get(`/orders/${id}`);
-
-      console.log("Order details response:", response.data);
 
       if (response.data.success) {
         setOrder(response.data.data);
@@ -39,6 +39,25 @@ function OrderDetails() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    setCancelling(true);
+    try {
+      const response = await apiClient.patch(`/orders/${id}/cancel`);
+
+      if (response.data.success) {
+        setOrder(response.data.data);
+        setShowCancelModal(false);
+        // Show success notification (you can add a toast notification here)
+        alert("Order cancelled successfully");
+      }
+    } catch (err) {
+      console.error("Error cancelling order:", err);
+      alert(err.response?.data?.error || "Failed to cancel order");
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -114,51 +133,17 @@ function OrderDetails() {
     return statusIcons[status?.toLowerCase()] || "•";
   };
 
-  const getOrderProgress = (status) => {
-    const progressMap = {
-      pending: 20,
-      confirmed: 40,
-      processing: 60,
-      shipped: 80,
-      delivered: 100,
-      cancelled: 0,
-    };
-    return progressMap[status?.toLowerCase()] || 0;
+  const canCancelOrder = (status) => {
+    const cancellableStatuses = ["pending", "confirmed"];
+    return cancellableStatuses.includes(status?.toLowerCase());
   };
 
   if (loading) {
     return (
       <Container className="order-details-page">
         <div className="loading-container">
-          <CircularProgress />
+          <CircularProgress style={{ color: "#000" }} />
           <p>Loading order details...</p>
-        </div>
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container className="order-details-page">
-        <div className="error-container">
-          <h3>Error</h3>
-          <p>{error}</p>
-          <button onClick={() => navigate("/orders")} className="back-btn">
-            Back to Orders
-          </button>
-        </div>
-      </Container>
-    );
-  }
-
-  if (!order) {
-    return (
-      <Container className="order-details-page">
-        <div className="error-container">
-          <h3>Order Not Found</h3>
-          <button onClick={() => navigate("/orders")} className="back-btn">
-            Back to Orders
-          </button>
         </div>
       </Container>
     );
@@ -166,14 +151,6 @@ function OrderDetails() {
 
   return (
     <Container className="order-details-page">
-      {/* Header */}
-      <div className="order-details-header">
-        <button onClick={() => navigate("/orders")} className="back-button">
-          <ArrowBackIcon /> Back to Orders
-        </button>
-        <h2>Order Details</h2>
-      </div>
-
       {/* Order Summary Card */}
       <Card className="order-summary-card">
         <Card.Body>
@@ -200,8 +177,19 @@ function OrderDetails() {
             </Col>
             <Col md={3} xs={6}>
               <div className="summary-item">
-                <span className="summary-label">Payment</span>
-                <span className="summary-value payment-status">✓ Paid</span>
+                <span className="summary-label">Status</span>
+                <span
+                  className="summary-value status-badge"
+                  style={{
+                    backgroundColor: getStatusColor(order.status),
+                    color: "white",
+                    padding: "5px 15px",
+                    borderRadius: "20px",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  {getStatusIcon(order.status)} {order.status?.toUpperCase()}
+                </span>
               </div>
             </Col>
           </Row>
@@ -209,100 +197,8 @@ function OrderDetails() {
       </Card>
 
       <Row>
-        {/* Left Column - Order Status & Items */}
+        {/* Left Column - Order Items */}
         <Col md={8}>
-          {/* Order Status Timeline */}
-          <Card className="status-card">
-            <Card.Body>
-              <h5 className="card-title">Order Status</h5>
-
-              <div className="status-badge-container">
-                <span
-                  className="status-badge"
-                  style={{
-                    backgroundColor: getStatusColor(order.status),
-                  }}
-                >
-                  {getStatusIcon(order.status)} {order.status?.toUpperCase()}
-                </span>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="order-progress">
-                <div className="progress-bar-container">
-                  <div
-                    className="progress-bar-fill"
-                    style={{
-                      width: `${getOrderProgress(order.status)}%`,
-                      backgroundColor: getStatusColor(order.status),
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Status Steps */}
-              <div className="status-timeline">
-                <div
-                  className={`timeline-step ${
-                    order.status === "confirmed" ||
-                    order.status === "processing" ||
-                    order.status === "shipped" ||
-                    order.status === "delivered"
-                      ? "active"
-                      : ""
-                  }`}
-                >
-                  <div className="step-icon">✓</div>
-                  <div className="step-label">Confirmed</div>
-                </div>
-                <div
-                  className={`timeline-step ${
-                    order.status === "processing" ||
-                    order.status === "shipped" ||
-                    order.status === "delivered"
-                      ? "active"
-                      : ""
-                  }`}
-                >
-                  <div className="step-icon">📦</div>
-                  <div className="step-label">Processing</div>
-                </div>
-                <div
-                  className={`timeline-step ${
-                    order.status === "shipped" || order.status === "delivered"
-                      ? "active"
-                      : ""
-                  }`}
-                >
-                  <div className="step-icon">🚚</div>
-                  <div className="step-label">Shipped</div>
-                </div>
-                <div
-                  className={`timeline-step ${
-                    order.status === "delivered" ? "active" : ""
-                  }`}
-                >
-                  <div className="step-icon">✓</div>
-                  <div className="step-label">Delivered</div>
-                </div>
-              </div>
-
-              {/* Track Order Button */}
-              {(order.status === "shipped" ||
-                order.status === "processing" ||
-                order.status === "confirmed") && (
-                <div className="track-button-container">
-                  <button
-                    onClick={() => navigate(`/track-order/${order.id}`)}
-                    className="track-order-button"
-                  >
-                    <LocalShippingIcon /> Track Your Order
-                  </button>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-
           {/* Order Items */}
           <Card className="items-card">
             <Card.Body>
@@ -353,6 +249,29 @@ function OrderDetails() {
               </div>
             </Card.Body>
           </Card>
+
+          {/* Action Buttons */}
+          <div className="order-action-buttons">
+            {(order.status === "shipped" ||
+              order.status === "processing" ||
+              order.status === "confirmed") && (
+              <button
+                onClick={() => navigate(`/track-order/${order.id}`)}
+                className="track-order-btn"
+              >
+                <LocalShippingIcon /> Track Order
+              </button>
+            )}
+
+            {canCancelOrder(order.status) && (
+              <button
+                onClick={() => setShowCancelModal(true)}
+                className="cancel-order-btn"
+              >
+                <CancelIcon /> Cancel Order
+              </button>
+            )}
+          </div>
         </Col>
 
         {/* Right Column - Shipping & Payment Info */}
@@ -380,7 +299,7 @@ function OrderDetails() {
                 </div>
                 <div className="info-row">
                   <span className="info-label">Transaction ID</span>
-                  <span className="info-value">
+                  <span className="info-value transaction-id">
                     {order.paymentId || order.payment_id || "N/A"}
                   </span>
                 </div>
@@ -400,6 +319,64 @@ function OrderDetails() {
           </Card>
         </Col>
       </Row>
+
+      {/* Cancel Order Modal */}
+      <Modal
+        show={showCancelModal}
+        onHide={() => setShowCancelModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Cancel Order</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Are you sure you want to cancel this order?</p>
+          <p style={{ fontSize: "0.9rem", color: "#666" }}>
+            Order #{order.id} - Total: ₹{order.total}
+          </p>
+          <p
+            style={{ fontSize: "0.9rem", color: "#dc3545", marginTop: "15px" }}
+          >
+            This action cannot be undone. Your refund will be processed within
+            5-7 business days.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowCancelModal(false)}
+            disabled={cancelling}
+            style={{
+              backgroundColor: "#f8f9fa",
+              color: "#333",
+              border: "1px solid #dee2e6",
+            }}
+          >
+            Keep Order
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleCancelOrder}
+            disabled={cancelling}
+            style={{
+              backgroundColor: "#dc3545",
+              border: "none",
+            }}
+          >
+            {cancelling ? (
+              <>
+                <CircularProgress
+                  size={20}
+                  style={{ color: "white", marginRight: "10px" }}
+                />
+                Cancelling...
+              </>
+            ) : (
+              "Yes, Cancel Order"
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 }

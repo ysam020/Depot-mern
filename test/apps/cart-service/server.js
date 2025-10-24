@@ -1,6 +1,10 @@
 import grpc from "@grpc/grpc-js";
 import prisma from "@depot/prisma";
-import { getUserIdFromMetadata } from "@depot/grpc-utils";
+import {
+  getUserIdFromMetadata,
+  successResponse,
+  errorResponse,
+} from "@depot/grpc-utils";
 import {
   CartServiceService,
   AddToCartResponse,
@@ -61,12 +65,18 @@ const cartServiceImpl = {
         });
       }
 
-      callback(
-        null,
-        AddToCartResponse.fromPartial({ cart: mapCartItem(cartItem) })
+      const response = successResponse(
+        { cart: mapCartItem(cartItem) },
+        "Product added to cart successfully"
       );
+      callback(null, AddToCartResponse.fromPartial(response.data));
     } catch (err) {
-      callback({ code: grpc.status.INTERNAL, message: err.message });
+      console.error("❌ AddToCart Error:", err);
+      const response = errorResponse(err.message || "Failed to add to cart");
+      callback({
+        code: grpc.status.INTERNAL,
+        message: response.message,
+      });
     }
   },
 
@@ -78,16 +88,18 @@ const cartServiceImpl = {
       const cart = await prisma.carts.findUnique({
         where: { user_id: userId },
       });
-      if (!cart) throw new Error("Cart not found");
+
+      if (!cart) {
+        const response = errorResponse("Cart not found");
+        return callback({
+          code: grpc.status.NOT_FOUND,
+          message: response.message,
+        });
+      }
 
       await prisma.cart_items.updateMany({
         where: { cart_id: cart.id, product_id: productId },
         data: { quantity },
-      });
-
-      await prisma.cart_items.findFirst({
-        where: { cart_id: cart.id, product_id: productId },
-        include: { product: true },
       });
 
       const updatedCart = await prisma.carts.findUnique({
@@ -106,9 +118,15 @@ const cartServiceImpl = {
           })
         ) || [];
 
-      callback(null, UpdateCartResponse.fromPartial({ carts }));
+      const response = successResponse({ carts }, "Cart updated successfully");
+      callback(null, UpdateCartResponse.fromPartial(response.data));
     } catch (err) {
-      callback({ code: grpc.status.INTERNAL, message: err.message });
+      console.error("❌ UpdateCart Error:", err);
+      const response = errorResponse(err.message || "Failed to update cart");
+      callback({
+        code: grpc.status.INTERNAL,
+        message: response.message,
+      });
     }
   },
 
@@ -120,15 +138,33 @@ const cartServiceImpl = {
       const cart = await prisma.carts.findUnique({
         where: { user_id: userId },
       });
-      if (!cart) throw new Error("Cart not found");
+
+      if (!cart) {
+        const response = errorResponse("Cart not found");
+        return callback({
+          code: grpc.status.NOT_FOUND,
+          message: response.message,
+        });
+      }
 
       await prisma.cart_items.deleteMany({
         where: { cart_id: cart.id, product_id: productId },
       });
 
+      const response = successResponse(
+        {},
+        "Product removed from cart successfully"
+      );
       callback(null, DeleteCartResponse.fromPartial({ cart: null }));
     } catch (err) {
-      callback({ code: grpc.status.INTERNAL, message: err.message });
+      console.error("❌ DeleteCart Error:", err);
+      const response = errorResponse(
+        err.message || "Failed to delete from cart"
+      );
+      callback({
+        code: grpc.status.INTERNAL,
+        message: response.message,
+      });
     }
   },
 
@@ -137,9 +173,10 @@ const cartServiceImpl = {
       const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
 
       if (!userId) {
+        const response = errorResponse("User ID missing");
         return callback({
           code: grpc.status.INVALID_ARGUMENT,
-          message: "User ID missing",
+          message: response.message,
         });
       }
 
@@ -159,10 +196,58 @@ const cartServiceImpl = {
           })
         ) || [];
 
-      callback(null, GetCartResponse.fromPartial({ carts }));
+      const response = successResponse({ carts }, "Cart fetched successfully");
+      callback(null, GetCartResponse.fromPartial(response.data));
     } catch (err) {
-      console.error(err);
-      callback({ code: grpc.status.INTERNAL, message: err.message });
+      console.error("❌ GetCart Error:", err);
+      const response = errorResponse(err.message || "Failed to fetch cart");
+      callback({
+        code: grpc.status.INTERNAL,
+        message: response.message,
+      });
+    }
+  },
+
+  clearCart: async (call, callback) => {
+    try {
+      const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
+
+      if (!userId) {
+        const response = errorResponse("User ID missing");
+        return callback({
+          code: grpc.status.INVALID_ARGUMENT,
+          message: response.message,
+        });
+      }
+
+      const cart = await prisma.carts.findUnique({
+        where: { user_id: userId },
+      });
+
+      if (!cart) {
+        const response = errorResponse("Cart not found");
+        return callback({
+          code: grpc.status.NOT_FOUND,
+          message: response.message,
+        });
+      }
+
+      // Delete all cart items for this user
+      await prisma.cart_items.deleteMany({
+        where: { cart_id: cart.id },
+      });
+
+      console.log(`✅ Cart cleared for user ${userId}`);
+
+      const response = successResponse({}, "Cart cleared successfully");
+      callback(null, GetCartResponse.fromPartial({ carts: [] }));
+    } catch (err) {
+      console.error("❌ ClearCart Error:", err);
+      const response = errorResponse(err.message || "Failed to clear cart");
+      callback({
+        code: grpc.status.INTERNAL,
+        message: response.message,
+      });
     }
   },
 };

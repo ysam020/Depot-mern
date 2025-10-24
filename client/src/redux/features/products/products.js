@@ -11,7 +11,7 @@ export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async ({ filterCategory, sortCategory }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/products");
+      const res = await apiClient("/products");
 
       let data = [];
 

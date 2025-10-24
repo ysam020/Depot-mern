@@ -62,6 +62,13 @@ export interface GetCartResponse {
   carts: Cart[];
 }
 
+export interface ClearCartRequest {
+}
+
+export interface ClearCartResponse {
+  carts: Cart[];
+}
+
 function createBaseCart(): Cart {
   return { id: 0, title: "", price: 0, image: "", quantity: 0 };
 }
@@ -671,6 +678,107 @@ export const GetCartResponse: MessageFns<GetCartResponse> = {
   },
 };
 
+function createBaseClearCartRequest(): ClearCartRequest {
+  return {};
+}
+
+export const ClearCartRequest: MessageFns<ClearCartRequest> = {
+  encode(_: ClearCartRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ClearCartRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseClearCartRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): ClearCartRequest {
+    return {};
+  },
+
+  toJSON(_: ClearCartRequest): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ClearCartRequest>, I>>(base?: I): ClearCartRequest {
+    return ClearCartRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ClearCartRequest>, I>>(_: I): ClearCartRequest {
+    const message = createBaseClearCartRequest();
+    return message;
+  },
+};
+
+function createBaseClearCartResponse(): ClearCartResponse {
+  return { carts: [] };
+}
+
+export const ClearCartResponse: MessageFns<ClearCartResponse> = {
+  encode(message: ClearCartResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.carts) {
+      Cart.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ClearCartResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseClearCartResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.carts.push(Cart.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ClearCartResponse {
+    return { carts: globalThis.Array.isArray(object?.carts) ? object.carts.map((e: any) => Cart.fromJSON(e)) : [] };
+  },
+
+  toJSON(message: ClearCartResponse): unknown {
+    const obj: any = {};
+    if (message.carts?.length) {
+      obj.carts = message.carts.map((e) => Cart.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ClearCartResponse>, I>>(base?: I): ClearCartResponse {
+    return ClearCartResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ClearCartResponse>, I>>(object: I): ClearCartResponse {
+    const message = createBaseClearCartResponse();
+    message.carts = object.carts?.map((e) => Cart.fromPartial(e)) || [];
+    return message;
+  },
+};
+
 export type CartServiceService = typeof CartServiceService;
 export const CartServiceService = {
   addToCart: {
@@ -709,6 +817,15 @@ export const CartServiceService = {
     responseSerialize: (value: GetCartResponse): Buffer => Buffer.from(GetCartResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer): GetCartResponse => GetCartResponse.decode(value),
   },
+  clearCart: {
+    path: "/carts.CartService/ClearCart",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ClearCartRequest): Buffer => Buffer.from(ClearCartRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ClearCartRequest => ClearCartRequest.decode(value),
+    responseSerialize: (value: ClearCartResponse): Buffer => Buffer.from(ClearCartResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ClearCartResponse => ClearCartResponse.decode(value),
+  },
 } as const;
 
 export interface CartServiceServer extends UntypedServiceImplementation {
@@ -716,6 +833,7 @@ export interface CartServiceServer extends UntypedServiceImplementation {
   updateCart: handleUnaryCall<UpdateCartRequest, UpdateCartResponse>;
   deleteCart: handleUnaryCall<DeleteCartRequest, DeleteCartResponse>;
   getCart: handleUnaryCall<GetCartRequest, GetCartResponse>;
+  clearCart: handleUnaryCall<ClearCartRequest, ClearCartResponse>;
 }
 
 export interface CartServiceClient extends Client {
@@ -778,6 +896,21 @@ export interface CartServiceClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: GetCartResponse) => void,
+  ): ClientUnaryCall;
+  clearCart(
+    request: ClearCartRequest,
+    callback: (error: ServiceError | null, response: ClearCartResponse) => void,
+  ): ClientUnaryCall;
+  clearCart(
+    request: ClearCartRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ClearCartResponse) => void,
+  ): ClientUnaryCall;
+  clearCart(
+    request: ClearCartRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ClearCartResponse) => void,
   ): ClientUnaryCall;
 }
 

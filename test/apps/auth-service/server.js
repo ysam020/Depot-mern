@@ -9,6 +9,7 @@ import {
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { successResponse, errorResponse } from "@depot/grpc-utils";
 
 dotenv.config({ quiet: true });
 
@@ -59,12 +60,17 @@ const authServiceImpl = {
       // Remove password from response
       const { password: _, ...safeUser } = user;
 
-      callback(null, SignupResponse.fromPartial({ user: safeUser }));
+      const response = successResponse(
+        { user: safeUser },
+        "User registered successfully"
+      );
+      callback(null, SignupResponse.fromPartial(response));
     } catch (err) {
       console.error("❌ Signup Error:", err);
+      const response = errorResponse(err.message || "Failed to register user");
       callback({
         code: grpc.status.INTERNAL,
-        message: err.message || "Failed to register user",
+        message: response.message,
       });
     }
   },
@@ -118,19 +124,22 @@ const authServiceImpl = {
         expiresIn: "7d",
       });
 
-      callback(
-        null,
-        SigninResponse.fromPartial({
+      const response = successResponse(
+        {
           user: safeUser,
           accessToken,
           refreshToken,
-        })
+        },
+        "Signed in successfully"
       );
+
+      callback(null, SigninResponse.fromPartial(response.data));
     } catch (err) {
       console.error("❌ Signin Error:", err);
+      const response = errorResponse(err.message || "Failed to sign in");
       callback({
         code: grpc.status.INTERNAL,
-        message: err.message || "Failed to sign in",
+        message: response.message,
       });
     }
   },
@@ -187,20 +196,28 @@ const authServiceImpl = {
         expiresIn: "7d",
       });
 
+      const response = successResponse(
+        {
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        },
+        "Tokens refreshed successfully"
+      );
+
       callback(
         null,
         RefreshTokenResponse.fromPartial({
-          accessToken: newAccessToken,
-          refreshToken: newRefreshToken,
-          success: true,
-          message: "Tokens refreshed successfully",
+          ...response.data,
+          success: response.success,
+          message: response.message,
         })
       );
     } catch (err) {
       console.error("❌ RefreshToken Error:", err);
+      const response = errorResponse(err.message || "Failed to refresh token");
       callback({
         code: grpc.status.INTERNAL,
-        message: err.message || "Failed to refresh token",
+        message: response.message,
       });
     }
   },
@@ -225,6 +242,7 @@ function startServer() {
         console.error("❌ Failed to start server:", err);
         throw err;
       }
+      console.log(`🟢 AuthService running on port ${port}`);
     }
   );
 }

@@ -1,6 +1,11 @@
 import grpc from "@grpc/grpc-js";
 import prisma from "@depot/prisma";
 import {
+  getUserIdFromMetadata,
+  successResponse,
+  errorResponse,
+} from "@depot/grpc-utils";
+import {
   OrderServiceService,
   CreateOrderResponse,
   GetOrderResponse,
@@ -11,13 +16,26 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const JWT_SECRET = process.env.JWT_SECRET;
+
 // Implement the order service
 const orderServiceImpl = {
   // Create a new order
   createOrder: async (call, callback) => {
     try {
+      // Get userId from JWT metadata
+      const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
+
+      if (!userId) {
+        const response = errorResponse("User not authenticated");
+        return callback({
+          code: grpc.status.UNAUTHENTICATED,
+          message: response.message,
+        });
+      }
+
       // CRITICAL: Using generated TypeScript types means request uses camelCase!
-      const { userId, items, total, paymentId, shippingAddress } = call.request;
+      const { items, total, paymentId, shippingAddress } = call.request;
 
       console.log("📦 Create Order Request:", {
         userId,
@@ -27,17 +45,11 @@ const orderServiceImpl = {
         shippingAddress,
       });
 
-      if (!userId) {
-        return callback({
-          code: grpc.status.INVALID_ARGUMENT,
-          message: "User ID is required",
-        });
-      }
-
       if (!items || items.length === 0) {
+        const response = errorResponse("Order must contain at least one item");
         return callback({
           code: grpc.status.INVALID_ARGUMENT,
-          message: "Order must contain at least one item",
+          message: response.message,
         });
       }
 
@@ -49,7 +61,7 @@ const orderServiceImpl = {
             user_id: userId,
             total,
             status: "confirmed",
-            shipping_address: shippingAddress, // ✅ Save shipping address as JSON string
+            shipping_address: shippingAddress,
           },
         });
 
@@ -124,9 +136,8 @@ const orderServiceImpl = {
         };
       });
 
-      callback(
-        null,
-        CreateOrderResponse.fromPartial({
+      const response = successResponse(
+        {
           order: {
             id: order.id,
             userId: order.user_id,
@@ -143,17 +154,26 @@ const orderServiceImpl = {
               image: item.product.image,
             })),
             paymentId: paymentId || 0,
-            shippingAddress: order.shipping_address || "", // ✅ Include shipping address in response
+            shippingAddress: order.shipping_address || "",
           },
-          success: true,
-          message: "Order created successfully",
+        },
+        "Order created successfully"
+      );
+
+      callback(
+        null,
+        CreateOrderResponse.fromPartial({
+          ...response.data,
+          success: response.success,
+          message: response.message,
         })
       );
     } catch (err) {
       console.error("❌ Create Order Error:", err);
+      const response = errorResponse(err.message || "Failed to create order");
       callback({
         code: grpc.status.INTERNAL,
-        message: err.message || "Failed to create order",
+        message: response.message,
       });
     }
   },
@@ -161,6 +181,16 @@ const orderServiceImpl = {
   // Get order by ID
   getOrder: async (call, callback) => {
     try {
+      const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
+
+      if (!userId) {
+        const response = errorResponse("User not authenticated");
+        return callback({
+          code: grpc.status.UNAUTHENTICATED,
+          message: response.message,
+        });
+      }
+
       const { id } = call.request;
 
       const order = await prisma.orders.findUnique({
@@ -180,15 +210,24 @@ const orderServiceImpl = {
       });
 
       if (!order) {
+        const response = errorResponse("Order not found");
         return callback({
           code: grpc.status.NOT_FOUND,
-          message: "Order not found",
+          message: response.message,
         });
       }
 
-      callback(
-        null,
-        GetOrderResponse.fromPartial({
+      // Verify order belongs to the authenticated user
+      if (order.user_id !== userId) {
+        const response = errorResponse("Access denied");
+        return callback({
+          code: grpc.status.PERMISSION_DENIED,
+          message: response.message,
+        });
+      }
+
+      const response = successResponse(
+        {
           order: {
             id: order.id,
             userId: order.user_id,
@@ -205,15 +244,19 @@ const orderServiceImpl = {
               image: item.product.image,
             })),
             paymentId: 0,
-            shippingAddress: order.shipping_address || "", // ✅ Include shipping address
+            shippingAddress: order.shipping_address || "",
           },
-        })
+        },
+        "Order fetched successfully"
       );
+
+      callback(null, GetOrderResponse.fromPartial(response.data));
     } catch (err) {
       console.error("❌ Get Order Error:", err);
+      const response = errorResponse(err.message || "Failed to get order");
       callback({
         code: grpc.status.INTERNAL,
-        message: err.message || "Failed to get order",
+        message: response.message,
       });
     }
   },
@@ -221,7 +264,15 @@ const orderServiceImpl = {
   // List orders by user
   listOrdersByUser: async (call, callback) => {
     try {
-      const { userId } = call.request;
+      const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
+
+      if (!userId) {
+        const response = errorResponse("User not authenticated");
+        return callback({
+          code: grpc.status.UNAUTHENTICATED,
+          message: response.message,
+        });
+      }
 
       const orders = await prisma.orders.findMany({
         where: { user_id: userId },
@@ -240,9 +291,8 @@ const orderServiceImpl = {
         orderBy: { created_at: "desc" },
       });
 
-      callback(
-        null,
-        ListOrdersByUserResponse.fromPartial({
+      const response = successResponse(
+        {
           orders: orders.map((order) => ({
             id: order.id,
             userId: order.user_id,
@@ -259,15 +309,19 @@ const orderServiceImpl = {
               image: item.product.image,
             })),
             paymentId: 0,
-            shippingAddress: order.shipping_address || "", // ✅ Include shipping address
+            shippingAddress: order.shipping_address || "",
           })),
-        })
+        },
+        "Orders fetched successfully"
       );
+
+      callback(null, ListOrdersByUserResponse.fromPartial(response.data));
     } catch (err) {
       console.error("❌ List Orders Error:", err);
+      const response = errorResponse(err.message || "Failed to list orders");
       callback({
         code: grpc.status.INTERNAL,
-        message: err.message || "Failed to list orders",
+        message: response.message,
       });
     }
   },
@@ -275,6 +329,16 @@ const orderServiceImpl = {
   // Update order status
   updateOrderStatus: async (call, callback) => {
     try {
+      const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
+
+      if (!userId) {
+        const response = errorResponse("User not authenticated");
+        return callback({
+          code: grpc.status.UNAUTHENTICATED,
+          message: response.message,
+        });
+      }
+
       const { id, status } = call.request;
 
       const validStatuses = [
@@ -284,14 +348,39 @@ const orderServiceImpl = {
         "delivered",
         "cancelled",
       ];
+
       if (!validStatuses.includes(status)) {
+        const response = errorResponse(
+          `Invalid status. Must be one of: ${validStatuses.join(", ")}`
+        );
         return callback({
           code: grpc.status.INVALID_ARGUMENT,
-          message: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+          message: response.message,
         });
       }
 
-      const order = await prisma.orders.update({
+      // Check if order exists and belongs to user
+      const existingOrder = await prisma.orders.findUnique({
+        where: { id },
+      });
+
+      if (!existingOrder) {
+        const response = errorResponse("Order not found");
+        return callback({
+          code: grpc.status.NOT_FOUND,
+          message: response.message,
+        });
+      }
+
+      if (existingOrder.user_id !== userId) {
+        const response = errorResponse("Access denied");
+        return callback({
+          code: grpc.status.PERMISSION_DENIED,
+          message: response.message,
+        });
+      }
+
+      const updatedOrder = await prisma.orders.update({
         where: { id },
         data: { status },
         include: {
@@ -308,16 +397,15 @@ const orderServiceImpl = {
         },
       });
 
-      callback(
-        null,
-        UpdateOrderStatusResponse.fromPartial({
+      const response = successResponse(
+        {
           order: {
-            id: order.id,
-            userId: order.user_id,
-            total: order.total,
-            status: order.status,
-            createdAt: order.created_at,
-            orderItems: order.order_items.map((item) => ({
+            id: updatedOrder.id,
+            userId: updatedOrder.user_id,
+            total: updatedOrder.total,
+            status: updatedOrder.status,
+            createdAt: updatedOrder.created_at,
+            orderItems: updatedOrder.order_items.map((item) => ({
               id: item.id,
               orderId: item.order_id,
               productId: item.product_id,
@@ -327,25 +415,37 @@ const orderServiceImpl = {
               image: item.product.image,
             })),
             paymentId: 0,
-            shippingAddress: order.shipping_address || "", // ✅ Include shipping address
+            shippingAddress: updatedOrder.shipping_address || "",
           },
-          success: true,
-          message: "Order status updated successfully",
+        },
+        "Order status updated successfully"
+      );
+
+      callback(
+        null,
+        UpdateOrderStatusResponse.fromPartial({
+          ...response.data,
+          success: response.success,
+          message: response.message,
         })
       );
     } catch (err) {
       console.error("❌ Update Order Status Error:", err);
 
       if (err.code === "P2025") {
+        const response = errorResponse("Order not found");
         return callback({
           code: grpc.status.NOT_FOUND,
-          message: "Order not found",
+          message: response.message,
         });
       }
 
+      const response = errorResponse(
+        err.message || "Failed to update order status"
+      );
       callback({
         code: grpc.status.INTERNAL,
-        message: err.message || "Failed to update order status",
+        message: response.message,
       });
     }
   },
@@ -360,14 +460,13 @@ function startServer() {
     `0.0.0.0:${PORT}`,
     grpc.ServerCredentials.createInsecure(),
     (err, port) => {
-      if (err) {
-        console.error("❌ Failed to start server:", err);
-        throw err;
-      }
+      if (err) throw err;
       console.log(`🟢 OrderService running on port ${port}`);
     }
   );
 }
+
+startServer();
 
 // Graceful shutdown
 process.on("SIGINT", async () => {
@@ -381,5 +480,3 @@ process.on("SIGTERM", async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
-
-startServer();

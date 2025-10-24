@@ -1,6 +1,10 @@
 import grpc from "@grpc/grpc-js";
 import prisma from "@depot/prisma";
-import { getUserIdFromMetadata } from "@depot/grpc-utils";
+import {
+  getUserIdFromMetadata,
+  successResponse,
+  errorResponse,
+} from "@depot/grpc-utils";
 import {
   WishlistServiceService,
   AddToWishlistResponse,
@@ -31,9 +35,10 @@ const wishlistServiceImpl = {
       const { id: productId } = call.request;
 
       if (!userId) {
+        const response = errorResponse("User not authenticated");
         return callback({
           code: grpc.status.UNAUTHENTICATED,
-          message: "User not authenticated",
+          message: response.message,
         });
       }
 
@@ -46,35 +51,36 @@ const wishlistServiceImpl = {
       });
 
       if (existingItem) {
+        const response = errorResponse("Product already in wishlist");
         return callback({
           code: grpc.status.ALREADY_EXISTS,
-          message: "Product already in wishlist",
+          message: response.message,
         });
       }
 
       // Add product to wishlist
-      await prisma.wishlists.create({
+      const wishlistItem = await prisma.wishlists.create({
         data: {
           user_id: userId,
           product_id: productId,
         },
-      });
-
-      // Fetch updated wishlist
-      const userWishlists = await prisma.wishlists.findMany({
-        where: { user_id: userId },
         include: { product: true },
       });
 
-      const wishlists = userWishlists.map((item) => mapWishlistItem(item));
-
-      callback(
-        null,
-        AddToWishlistResponse.fromPartial({ wishlist: wishlists })
+      const response = successResponse(
+        { wishlist: [mapWishlistItem(wishlistItem)] },
+        "Product added to wishlist successfully"
       );
+      callback(null, AddToWishlistResponse.fromPartial(response.data));
     } catch (err) {
-      console.error("AddToWishlist error:", err);
-      callback({ code: grpc.status.INTERNAL, message: err.message });
+      console.error("❌ AddToWishlist Error:", err);
+      const response = errorResponse(
+        err.message || "Failed to add to wishlist"
+      );
+      callback({
+        code: grpc.status.INTERNAL,
+        message: response.message,
+      });
     }
   },
 
@@ -84,28 +90,14 @@ const wishlistServiceImpl = {
       const { id: productId } = call.request;
 
       if (!userId) {
+        const response = errorResponse("User not authenticated");
         return callback({
           code: grpc.status.UNAUTHENTICATED,
-          message: "User not authenticated",
+          message: response.message,
         });
       }
 
-      // Check if wishlist item exists
-      const wishlistItem = await prisma.wishlists.findFirst({
-        where: {
-          user_id: userId,
-          product_id: productId,
-        },
-      });
-
-      if (!wishlistItem) {
-        return callback({
-          code: grpc.status.NOT_FOUND,
-          message: "Product not found in wishlist",
-        });
-      }
-
-      // Remove product from wishlist
+      // Remove from wishlist
       await prisma.wishlists.deleteMany({
         where: {
           user_id: userId,
@@ -113,7 +105,7 @@ const wishlistServiceImpl = {
         },
       });
 
-      // Fetch updated wishlist
+      // Fetch remaining wishlist items
       const userWishlists = await prisma.wishlists.findMany({
         where: { user_id: userId },
         include: { product: true },
@@ -121,13 +113,20 @@ const wishlistServiceImpl = {
 
       const wishlists = userWishlists.map((item) => mapWishlistItem(item));
 
-      callback(
-        null,
-        RemoveFromWishlistResponse.fromPartial({ wishlist: wishlists })
+      const response = successResponse(
+        { wishlist: wishlists },
+        "Product removed from wishlist successfully"
       );
+      callback(null, RemoveFromWishlistResponse.fromPartial(response.data));
     } catch (err) {
-      console.error("RemoveFromWishlist error:", err);
-      callback({ code: grpc.status.INTERNAL, message: err.message });
+      console.error("❌ RemoveFromWishlist Error:", err);
+      const response = errorResponse(
+        err.message || "Failed to remove from wishlist"
+      );
+      callback({
+        code: grpc.status.INTERNAL,
+        message: response.message,
+      });
     }
   },
 
@@ -136,9 +135,10 @@ const wishlistServiceImpl = {
       const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
 
       if (!userId) {
+        const response = errorResponse("User not authenticated");
         return callback({
           code: grpc.status.UNAUTHENTICATED,
-          message: "User not authenticated",
+          message: response.message,
         });
       }
 
@@ -150,10 +150,18 @@ const wishlistServiceImpl = {
 
       const wishlists = userWishlists.map((item) => mapWishlistItem(item));
 
-      callback(null, GetWishlistResponse.fromPartial({ wishlist: wishlists }));
+      const response = successResponse(
+        { wishlist: wishlists },
+        "Wishlist fetched successfully"
+      );
+      callback(null, GetWishlistResponse.fromPartial(response.data));
     } catch (err) {
-      console.error("GetWishlist error:", err);
-      callback({ code: grpc.status.INTERNAL, message: err.message });
+      console.error("❌ GetWishlist Error:", err);
+      const response = errorResponse(err.message || "Failed to fetch wishlist");
+      callback({
+        code: grpc.status.INTERNAL,
+        message: response.message,
+      });
     }
   },
 };

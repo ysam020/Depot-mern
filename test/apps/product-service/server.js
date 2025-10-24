@@ -1,5 +1,6 @@
 import grpc from "@grpc/grpc-js";
-import prisma from "@depot/prisma"; // your Prisma client
+import prisma from "@depot/prisma";
+import { successResponse, errorResponse } from "@depot/grpc-utils";
 import {
   ProductServiceService,
   GetProductResponse,
@@ -15,18 +16,24 @@ const productServiceImpl = {
       });
 
       if (!product) {
+        const response = errorResponse("Product not found");
         return callback({
           code: grpc.status.NOT_FOUND,
-          message: "Product not found",
+          message: response.message,
         });
       }
 
-      callback(null, GetProductResponse.fromPartial({ product }));
+      const response = successResponse(
+        { product },
+        "Product fetched successfully"
+      );
+      callback(null, GetProductResponse.fromPartial(response.data));
     } catch (err) {
-      console.error("gRPC Error:", err);
+      console.error("❌ GetProduct Error:", err);
+      const response = errorResponse(err.message || "Failed to fetch product");
       callback({
         code: grpc.status.INTERNAL,
-        message: err.message,
+        message: response.message,
       });
     }
   },
@@ -35,12 +42,17 @@ const productServiceImpl = {
     try {
       const products = await prisma.products.findMany();
 
-      callback(null, ListProductsResponse.fromPartial({ products }));
+      const response = successResponse(
+        { products },
+        "Products fetched successfully"
+      );
+      callback(null, ListProductsResponse.fromPartial(response.data));
     } catch (err) {
-      console.error("gRPC Error:", err);
+      console.error("❌ ListProducts Error:", err);
+      const response = errorResponse(err.message || "Failed to fetch products");
       callback({
         code: grpc.status.INTERNAL,
-        message: err.message,
+        message: response.message,
       });
     }
   },

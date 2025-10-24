@@ -65,24 +65,23 @@ const paymentServiceImpl = {
         });
       }
 
-      // Create order in Razorpay
-      const order = await razorpay.orders.create({
-        amount: amount * 100, // Razorpay expects amount in paise (1 INR = 100 paise)
+      // Create Razorpay order
+      const razorpayOrder = await razorpay.orders.create({
+        amount: amount, // Amount in paise
         currency: currency || "INR",
         receipt: receipt || `receipt_${Date.now()}`,
-        payment_capture: 1, // Auto capture payment
       });
 
-      console.log(`✅ Razorpay order created: ${order.id}`);
+      console.log(`✅ Razorpay order created: ${razorpayOrder.id}`);
 
       callback(null, {
-        razorpay_order_id: order.id,
-        amount: order.amount,
-        currency: order.currency,
+        razorpay_order_id: razorpayOrder.id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
         key_id: process.env.RAZORPAY_KEY_ID,
       });
     } catch (err) {
-      console.error("❌ Create Order Error:", err);
+      console.error("❌ Create Razorpay Order Error:", err);
       callback({
         code: grpc.status.INTERNAL,
         message: err.message || "Failed to create Razorpay order",
@@ -103,51 +102,22 @@ const paymentServiceImpl = {
         shipping_address,
       } = call.request;
 
-      console.log("🔐 Verifying payment:", razorpay_payment_id);
-      console.log("👤 User ID:", user_id);
-      console.log("📦 Cart items:", cart_items?.length || 0, "items");
-      console.log("💰 Amount:", amount);
+      console.log("🔍 Verifying payment:", {
+        razorpay_order_id,
+        razorpay_payment_id,
+        user_id,
+        amount,
+        items_count: cart_items?.length,
+      });
 
-      // Validate required fields
-      if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-        return callback({
-          code: grpc.status.INVALID_ARGUMENT,
-          message: "Missing payment details",
-        });
-      }
-
-      if (!user_id) {
-        return callback({
-          code: grpc.status.INVALID_ARGUMENT,
-          message: "User ID is required",
-        });
-      }
-
-      if (!cart_items || cart_items.length === 0) {
-        return callback({
-          code: grpc.status.INVALID_ARGUMENT,
-          message: "Cart items are required",
-        });
-      }
-
-      if (!shipping_address) {
-        return callback({
-          code: grpc.status.INVALID_ARGUMENT,
-          message: "Shipping address is required",
-        });
-      }
-
-      // Step 1: Verify Razorpay signature
-      const body = razorpay_order_id + "|" + razorpay_payment_id;
-      const expectedSignature = crypto
+      // Step 1: Verify signature
+      const generatedSignature = crypto
         .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-        .update(body.toString())
+        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
         .digest("hex");
 
-      const isValid = expectedSignature === razorpay_signature;
-
-      if (!isValid) {
-        console.error("❌ Invalid payment signature");
+      if (generatedSignature !== razorpay_signature) {
+        console.error("❌ Signature verification failed");
         return callback({
           code: grpc.status.INVALID_ARGUMENT,
           message: "Invalid payment signature",
@@ -157,40 +127,154 @@ const paymentServiceImpl = {
       console.log("✅ Payment signature verified");
 
       // Step 2: Fetch payment details from Razorpay
-      let paymentDetails;
+      let razorpayPaymentDetails;
       try {
-        paymentDetails = await razorpay.payments.fetch(razorpay_payment_id);
+        razorpayPaymentDetails =
+          await razorpay.payments.fetch(razorpay_payment_id);
         console.log(
-          `💳 Payment method: ${paymentDetails.method}, Status: ${paymentDetails.status}`
+          `✅ Razorpay payment fetched: Status=${razorpayPaymentDetails.status}`
         );
       } catch (fetchErr) {
-        console.error("⚠️ Could not fetch payment details:", fetchErr.message);
-        // Continue anyway as signature is valid
+        console.error("❌ Failed to fetch payment from Razorpay:", fetchErr);
+        return callback({
+          code: grpc.status.INTERNAL,
+          message: "Failed to fetch payment details from Razorpay",
+        });
       }
 
-      // Step 3: Check if payment already exists or create new payment
-      let payment = await prisma.payments.findUnique({
-        where: { razorpay_order_id: razorpay_order_id },
+      // Step 3: Verify payment status
+      if (razorpayPaymentDetails.status !== "captured") {
+        console.error(
+          `❌ Payment not captured: ${razorpayPaymentDetails.status}`
+        );
+        return callback({
+          code: grpc.status.FAILED_PRECONDITION,
+          message: `Payment not captured. Status: ${razorpayPaymentDetails.status}`,
+        });
+      }
+
+      // Step 4: Save payment to database
+      const payment = await prisma.payments.create({
+        data: {
+          razorpay_order_id,
+          razorpay_payment_id,
+          razorpay_signature,
+          amount,
+          currency: razorpayPaymentDetails.currency || "INR",
+          status: "success",
+          payment_method: razorpayPaymentDetails.method || "unknown",
+          user_id,
+        },
       });
 
-      if (payment) {
-        console.log(
-          `⚠️ Payment already exists for order: ${razorpay_order_id}`
-        );
+      console.log(`✅ Payment saved: ID=${payment.id}`);
 
-        // Check if order was already created
-        if (payment.order_id) {
-          console.log(
-            `✅ Order already created: Order ID = ${payment.order_id}`
-          );
+      // Step 5: Prepare order items
+      const orderItems = cart_items.map((item) => ({
+        id: 0, // Will be set by database
+        orderId: 0, // Will be set by database
+        productId: parseInt(item.id) || 0,
+        quantity: parseInt(item.quantity) || 0,
+        price: parseFloat(item.price) || 0,
+        title: String(item.title || ""),
+        image: String(item.image || ""),
+      }));
 
-          // Return the existing payment and order info
-          return callback(null, {
+      const orderRequest = {
+        userId: 0, // Dummy value - actual userId extracted from JWT metadata in order service
+        items: orderItems,
+        total: parseFloat(amount) || 0,
+        paymentId: parseInt(payment.id) || 0,
+        shippingAddress: shipping_address
+          ? JSON.stringify(shipping_address)
+          : "",
+      };
+
+      console.log("📤 Order request:", JSON.stringify(orderRequest, null, 2));
+
+      // CRITICAL FIX: Forward the authorization metadata from the incoming call to the order service
+      const metadata = new grpc.Metadata();
+      const authHeader = call.metadata.get("authorization")[0];
+      if (authHeader) {
+        metadata.add("authorization", authHeader);
+        console.log("✅ Forwarding authorization metadata to order service");
+      } else {
+        console.warn("⚠️ No authorization header found in metadata");
+      }
+
+      // Step 6: Create order via Order Service with forwarded metadata
+      orderClient.createOrder(
+        orderRequest,
+        metadata,
+        async (orderErr, orderResponse) => {
+          if (orderErr) {
+            console.error("❌ Order Creation Error:", orderErr);
+            console.error("Error details:", {
+              code: orderErr.code,
+              message: orderErr.message,
+              details: orderErr.details,
+            });
+
+            // Payment was successful but order creation failed
+            // Update payment status to indicate issue
+            await prisma.payments
+              .update({
+                where: { id: payment.id },
+                data: { status: "payment_success_order_failed" },
+              })
+              .catch((updateErr) => {
+                console.error("❌ Failed to update payment status:", updateErr);
+              });
+
+            return callback({
+              code: grpc.status.INTERNAL,
+              message: `Payment successful but order creation failed: ${orderErr.message}`,
+            });
+          }
+
+          console.log(`✅ Order created: ID=${orderResponse.order.id}`);
+
+          // Step 7: Update payment with order_id
+          try {
+            await prisma.payments.update({
+              where: { id: payment.id },
+              data: { order_id: orderResponse.order.id },
+            });
+
+            console.log(
+              `🔗 Payment linked to order: Payment#${payment.id} → Order#${orderResponse.order.id}`
+            );
+          } catch (updateErr) {
+            console.error("⚠️ Payment Update Error:", updateErr);
+            // Order was created but payment update failed
+            // This is less critical, continue
+          }
+
+          // Step 8: Clear user's cart after successful order
+          try {
+            const userCart = await prisma.carts.findUnique({
+              where: { user_id },
+            });
+
+            if (userCart) {
+              await prisma.cart_items.deleteMany({
+                where: { cart_id: userCart.id },
+              });
+              console.log(`🛒 Cart cleared for user ${user_id}`);
+            }
+          } catch (cartErr) {
+            console.error("⚠️ Failed to clear cart:", cartErr);
+            // Non-critical error, continue
+          }
+
+          // Step 9: Return success response
+          console.log("🎉 Payment verification complete!");
+          callback(null, {
             success: true,
-            message: "Payment already processed and order created",
+            message: "Payment verified and order created successfully",
             payment: {
               id: payment.id.toString(),
-              order_id: payment.order_id,
+              order_id: orderResponse.order.id,
               razorpay_order_id: payment.razorpay_order_id,
               razorpay_payment_id: payment.razorpay_payment_id,
               razorpay_signature: payment.razorpay_signature,
@@ -202,135 +286,7 @@ const paymentServiceImpl = {
             },
           });
         }
-
-        // Payment exists but order not created - update payment details
-        payment = await prisma.payments.update({
-          where: { id: payment.id },
-          data: {
-            razorpay_payment_id,
-            razorpay_signature,
-            status: "completed",
-            payment_method: paymentDetails?.method || "unknown",
-          },
-        });
-
-        console.log(`🔄 Payment updated: ID=${payment.id}`);
-      } else {
-        // Create new payment
-        payment = await prisma.payments.create({
-          data: {
-            razorpay_order_id,
-            razorpay_payment_id,
-            razorpay_signature,
-            amount,
-            currency: "INR",
-            status: "completed",
-            user_id,
-            payment_method: paymentDetails?.method || "unknown",
-          },
-        });
-
-        console.log(`💾 Payment saved to database: ID=${payment.id}`);
-      }
-
-      // Step 4: Prepare order items for Order Service
-      console.log("🔍 Raw cart items:", JSON.stringify(cart_items, null, 2));
-
-      // CRITICAL: Convert to camelCase for OrderServiceClient (TypeScript generated)
-      const orderItems = cart_items.map((item) => {
-        const mappedItem = {
-          id: 0, // Will be auto-generated
-          orderId: 0, // ✅ camelCase! Will be set by order service
-          productId: parseInt(item.id) || 0, // ✅ camelCase!
-          quantity: parseInt(item.quantity) || 1,
-          price: parseFloat(item.price) || 0.0,
-          title: String(item.title || ""),
-          image: String(item.image || ""),
-        };
-
-        console.log(`📦 Mapped item:`, mappedItem);
-        return mappedItem;
-      });
-
-      console.log("✅ All order items prepared");
-      console.log("📞 Calling Order Service to create order...");
-
-      // Step 5: Create order using Order Service (gRPC call with camelCase)
-      // CRITICAL: OrderServiceClient expects camelCase field names!
-      const orderRequest = {
-        userId: parseInt(user_id), // ✅ camelCase!
-        items: orderItems,
-        total: parseFloat(amount),
-        paymentId: parseInt(payment.id), // ✅ camelCase!
-        shippingAddress: JSON.stringify(shipping_address), // ✅ camelCase!
-      };
-
-      console.log("📤 Order request:", JSON.stringify(orderRequest, null, 2));
-
-      orderClient.createOrder(orderRequest, async (orderErr, orderResponse) => {
-        if (orderErr) {
-          console.error("❌ Order Creation Error:", orderErr);
-          console.error("Error details:", {
-            code: orderErr.code,
-            message: orderErr.message,
-            details: orderErr.details,
-          });
-
-          // Payment was successful but order creation failed
-          // Update payment status to indicate issue
-          await prisma.payments
-            .update({
-              where: { id: payment.id },
-              data: { status: "payment_success_order_failed" },
-            })
-            .catch((updateErr) => {
-              console.error("❌ Failed to update payment status:", updateErr);
-            });
-
-          return callback({
-            code: grpc.status.INTERNAL,
-            message: `Payment successful but order creation failed: ${orderErr.message}`,
-          });
-        }
-
-        console.log(`✅ Order created: ID=${orderResponse.order.id}`);
-
-        // Step 6: Update payment with order_id
-        try {
-          await prisma.payments.update({
-            where: { id: payment.id },
-            data: { order_id: orderResponse.order.id },
-          });
-
-          console.log(
-            `🔗 Payment linked to order: Payment#${payment.id} → Order#${orderResponse.order.id}`
-          );
-        } catch (updateErr) {
-          console.error("⚠️ Payment Update Error:", updateErr);
-          // Order was created but payment update failed
-          // This is less critical, continue
-        }
-
-        // Step 7: Return success response
-        console.log("🎉 Payment verification complete!");
-
-        callback(null, {
-          success: true,
-          message: "Payment verified and order created successfully",
-          payment: {
-            id: payment.id.toString(),
-            order_id: orderResponse.order.id,
-            razorpay_order_id: payment.razorpay_order_id,
-            razorpay_payment_id: payment.razorpay_payment_id,
-            razorpay_signature: payment.razorpay_signature,
-            amount: payment.amount,
-            currency: payment.currency,
-            status: payment.status,
-            user_id: payment.user_id,
-            payment_method: payment.payment_method,
-          },
-        });
-      });
+      );
     } catch (err) {
       console.error("❌ Verify Payment Error:", err);
       callback({
