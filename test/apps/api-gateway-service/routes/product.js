@@ -1,5 +1,5 @@
 import express from "express";
-import { ProductServiceClient } from "../../../dist/product.js";
+import { ProductServiceClient } from "@depot/proto-defs/product";
 import grpc from "@grpc/grpc-js";
 import dotenv from "dotenv";
 dotenv.config({ quiet: true });

@@ -1,23 +1,41 @@
 import grpc from "@grpc/grpc-js";
+import protoLoader from "@grpc/proto-loader";
 import prisma from "@depot/prisma";
-import { successResponse, errorResponse } from "@depot/grpc-utils";
-import {
-  ProductServiceService,
-  GetProductResponse,
-  ListProductsResponse,
-} from "../../dist/product.js";
-import { BaseGrpcService } from "@depot/grpc-utils";
+import { successResponse, BaseGrpcService } from "@depot/grpc-utils";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Load proto
+const PRODUCT_PROTO_PATH = path.resolve(
+  __dirname,
+  "../../packages/proto-defs/src/proto/product.proto"
+);
+
+const packageDef = protoLoader.loadSync(PRODUCT_PROTO_PATH, {
+  keepCase: true,
+  longs: String,
+  enums: String,
+  defaults: true,
+  oneofs: true,
+});
+
+const productProto = grpc.loadPackageDefinition(packageDef);
 
 class ProductService extends BaseGrpcService {
   constructor() {
     const serviceImpl = {
-      getProduct: BaseGrpcService.wrapHandler(ProductService.getProduct),
-      listProducts: BaseGrpcService.wrapHandler(ProductService.listProducts),
+      GetProduct: BaseGrpcService.wrapHandler(ProductService.getProduct),
+      ListProducts: BaseGrpcService.wrapHandler(ProductService.listProducts),
     };
 
-    super("ProductService", ProductServiceService, serviceImpl, {
-      port: process.env.PRODUCT_SERVICE_PORT || 50052,
-    });
+    super(
+      "ProductService",
+      productProto.products.ProductService.service,
+      serviceImpl,
+      { port: process.env.PRODUCT_SERVICE_PORT || 50052 }
+    );
   }
 
   static async getProduct(call, callback) {
@@ -39,23 +57,20 @@ class ProductService extends BaseGrpcService {
       { product },
       "Product fetched successfully"
     );
-    callback(null, GetProductResponse.fromPartial(response.data));
+    callback(null, response.data);
   }
 
   static async listProducts(call, callback) {
     const products = await prisma.products.findMany();
-
     const response = successResponse(
       { products },
       "Products fetched successfully"
     );
-    callback(null, ListProductsResponse.fromPartial(response.data));
+    callback(null, response.data);
   }
 }
 
-// Start the server
-const productService = new ProductService();
-productService.start().catch((err) => {
+new ProductService().start().catch((err) => {
   console.error("Failed to start ProductService:", err);
   process.exit(1);
 });

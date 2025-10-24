@@ -1,6 +1,6 @@
 import express from "express";
 import grpc from "@grpc/grpc-js";
-import { WishlistServiceClient } from "../../../dist/wishlist.js";
+import { WishlistServiceClient } from "@depot/proto-defs/wishlist";
 import { jwtMiddleware } from "../middlewares/auth.js";
 import dotenv from "dotenv";
 dotenv.config({ quiet: true });

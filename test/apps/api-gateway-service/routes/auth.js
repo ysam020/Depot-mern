@@ -1,5 +1,5 @@
 import express from "express";
-import { AuthServiceClient } from "../../../dist/user.js";
+import { AuthServiceClient } from "@depot/proto-defs/user";
 import grpc from "@grpc/grpc-js";
 import dotenv from "dotenv";
 

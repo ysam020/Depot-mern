@@ -12,7 +12,7 @@ import {
   DeleteCartResponse,
   GetCartResponse,
   Cart as CartMessage,
-} from "../../dist/cart.js";
+} from "@depot/proto-defs/cart";
 import dotenv from "dotenv";
 import { BaseGrpcService } from "@depot/grpc-utils";
 

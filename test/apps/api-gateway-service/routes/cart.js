@@ -1,6 +1,6 @@
 import express from "express";
 import grpc from "@grpc/grpc-js";
-import { CartServiceClient } from "../../../dist/cart.js";
+import { CartServiceClient } from "@depot/proto-defs/cart";
 import dotenv from "dotenv";
 dotenv.config({ quiet: true });
 

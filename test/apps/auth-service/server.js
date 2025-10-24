@@ -5,7 +5,7 @@ import {
   SignupResponse,
   SigninResponse,
   RefreshTokenResponse,
-} from "../../dist/user.js";
+} from "@depot/proto-defs/user";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
