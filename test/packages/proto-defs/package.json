@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "proto:gen": "node ./generate_proto.mjs"
+    "proto:gen": "node src/generate_proto.mjs"
   }
 }
