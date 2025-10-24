@@ -440,33 +440,34 @@ class PaymentService extends BaseGrpcService {
   }
 
   static async verifyPayment(call, callback) {
+    // ✅ Use snake_case to match Payment Service proto definition
     const {
-      razorpayOrderId,
-      razorpayPaymentId,
-      razorpaySignature,
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
       amount,
-      userId,
-      cartItems,
-      shippingAddress,
+      user_id,
+      cart_items,
+      shipping_address,
     } = call.request;
 
     console.log("📥 Payment Service - VerifyPayment request:", {
-      razorpayOrderId,
-      razorpayPaymentId,
-      razorpaySignature,
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
       amount,
-      userId,
-      cartItemsCount: cartItems?.length,
-      hasShippingAddress: !!shippingAddress,
+      user_id,
+      cartItemsCount: cart_items?.length,
+      hasShippingAddress: !!shipping_address,
     });
 
     // Step 1: Verify signature
     console.log("🔐 Step 1: Verifying signature...");
     if (
       !PaymentService.verifySignature(
-        razorpayOrderId,
-        razorpayPaymentId,
-        razorpaySignature
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature
       )
     ) {
       console.error("❌ Signature verification failed");
@@ -482,7 +483,8 @@ class PaymentService extends BaseGrpcService {
     console.log("🔄 Step 2: Fetching payment details from Razorpay...");
     let razorpayPaymentDetails;
     try {
-      razorpayPaymentDetails = await razorpay.payments.fetch(razorpayPaymentId);
+      razorpayPaymentDetails =
+        await razorpay.payments.fetch(razorpay_payment_id);
       console.log("✅ Payment details fetched:", {
         status: razorpayPaymentDetails.status,
         method: razorpayPaymentDetails.method,
@@ -514,47 +516,53 @@ class PaymentService extends BaseGrpcService {
     console.log("💾 Step 4: Saving payment to database...");
     const payment = await prisma.payments.create({
       data: {
-        razorpay_order_id: razorpayOrderId,
-        razorpay_payment_id: razorpayPaymentId,
-        razorpay_signature: razorpaySignature,
+        razorpay_order_id: razorpay_order_id,
+        razorpay_payment_id: razorpay_payment_id,
+        razorpay_signature: razorpay_signature,
         amount,
         currency: razorpayPaymentDetails.currency || "INR",
         status: "success",
         payment_method: razorpayPaymentDetails.method || "unknown",
-        user_id: userId,
+        user_id: user_id,
       },
     });
     console.log("✅ Payment saved to database:", { paymentId: payment.id });
 
-    // Step 5: Prepare order items with camelCase for TypeScript generated client
+    // Step 5: Prepare order items with snake_case for Order Service
+    // ✅ CRITICAL: Using snake_case everywhere
     console.log("📦 Step 5: Preparing order items...");
-    const orderItems = cartItems.map((item) => ({
+    const orderItems = cart_items.map((item) => ({
       id: 0,
-      orderId: 0,
-      productId: parseInt(item.id) || 0,
+      order_id: 0, // ✅ snake_case
+      product_id: parseInt(item.id) || 0, // ✅ snake_case
       quantity: parseInt(item.quantity) || 0,
       price: parseFloat(item.price) || 0,
       title: String(item.title || ""),
       image: String(item.image || ""),
     }));
 
-    // Convert to camelCase for TypeScript generated OrderServiceClient
+    // ✅ CRITICAL: Use snake_case for Order Service
     const orderRequest = {
-      userId: userId, // ✅ camelCase
+      user_id: user_id, // ✅ snake_case
       items: orderItems,
       total: parseFloat(amount) || 0,
-      paymentId: parseInt(payment.id) || 0, // ✅ camelCase
-      shippingAddress: shippingAddress // ✅ camelCase
-        ? JSON.stringify(shippingAddress)
+      payment_id: parseInt(payment.id) || 0, // ✅ snake_case
+      shipping_address: shipping_address // ✅ snake_case
+        ? JSON.stringify(shipping_address)
         : "",
     };
 
     console.log("📋 Order request prepared:", {
-      userId: orderRequest.userId,
+      user_id: orderRequest.user_id,
       itemsCount: orderRequest.items.length,
       total: orderRequest.total,
-      paymentId: orderRequest.paymentId,
+      payment_id: orderRequest.payment_id,
     });
+
+    console.log(
+      "📋 Full order request:",
+      JSON.stringify(orderRequest, null, 2)
+    );
 
     // Step 6: Forward authorization metadata
     const metadata = PaymentService.forwardAuthMetadata(call.metadata);
@@ -562,7 +570,6 @@ class PaymentService extends BaseGrpcService {
     // Step 7: Create order via Order Service
     console.log("🔄 Step 7: Calling Order Service to create order...");
     orderClient.createOrder(
-      // ✅ camelCase method name
       orderRequest,
       metadata,
       async (orderErr, orderResponse) => {
@@ -610,10 +617,10 @@ class PaymentService extends BaseGrpcService {
 
         // Step 9: Clear user's cart
         console.log("🧹 Step 9: Clearing user cart...");
-        await PaymentService.clearUserCart(userId);
+        await PaymentService.clearUserCart(user_id);
         console.log("✅ Cart cleared");
 
-        // Step 10: Use snake_case to match the compiled proto
+        // Step 10: Use snake_case to match Payment Service proto
         const finalResponse = VerifyPaymentResponse.fromPartial({
           success: true,
           message: "Payment verified and order created successfully",
