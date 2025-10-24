@@ -251,16 +251,7 @@ export const OrderItem: MessageFns<OrderItem> = {
 };
 
 function createBaseOrder(): Order {
-  return {
-    id: 0,
-    user_id: 0,
-    total: 0,
-    status: "",
-    created_at: undefined,
-    order_items: [],
-    payment_id: 0,
-    shipping_address: "",
-  };
+  return { id: 0, user_id: 0, total: 0, status: "", order_items: [], payment_id: 0, shipping_address: "" };
 }
 
 export const Order: MessageFns<Order> = {
@@ -558,7 +549,7 @@ export const CreateOrderRequest: MessageFns<CreateOrderRequest> = {
 };
 
 function createBaseCreateOrderResponse(): CreateOrderResponse {
-  return { order: undefined, success: false, message: "" };
+  return { success: false, message: "" };
 }
 
 export const CreateOrderResponse: MessageFns<CreateOrderResponse> = {
@@ -708,7 +699,7 @@ export const GetOrderRequest: MessageFns<GetOrderRequest> = {
 };
 
 function createBaseGetOrderResponse(): GetOrderResponse {
-  return { order: undefined };
+  return {};
 }
 
 export const GetOrderResponse: MessageFns<GetOrderResponse> = {
@@ -958,7 +949,7 @@ export const UpdateOrderStatusRequest: MessageFns<UpdateOrderStatusRequest> = {
 };
 
 function createBaseUpdateOrderStatusResponse(): UpdateOrderStatusResponse {
-  return { order: undefined, success: false, message: "" };
+  return { success: false, message: "" };
 }
 
 export const UpdateOrderStatusResponse: MessageFns<UpdateOrderStatusResponse> = {

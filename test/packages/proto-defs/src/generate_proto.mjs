@@ -85,17 +85,19 @@ async function generateProtos() {
     process.stdout.write(`⚙️  Processing ${relativePath}... `);
 
     const command = `protoc \
-      --plugin=protoc-gen-ts_proto=${tsProtoPath} \
-      --ts_proto_out=${baseGeneratedDir} \
-      --ts_proto_opt=esModuleInterop=true \
-      --ts_proto_opt=outputServices=grpc-js \
-      --ts_proto_opt=outputClientImpl=grpc-js \
-      --ts_proto_opt=env=node \
-      --ts_proto_opt=useOptionals=messages \
-      --ts_proto_opt=useSnakeCasing=false \
-      --ts_proto_opt=snakeToCamel=false \
-      --proto_path=${baseProtoDir} \
-      ${protoFile}`;
+  --plugin=protoc-gen-ts_proto=${tsProtoPath} \
+  --ts_proto_out=${baseGeneratedDir} \
+  --ts_proto_opt=esModuleInterop=true \
+  --ts_proto_opt=outputServices=grpc-js \
+  --ts_proto_opt=outputClientImpl=grpc-js \
+  --ts_proto_opt=env=node \
+  --ts_proto_opt=useOptionals=messages \
+  --ts_proto_opt=useSnakeCasing=false \
+  --ts_proto_opt=snakeToCamel=false \
+  --ts_proto_opt=initializeFieldsAsUndefined=false \
+  --ts_proto_opt=useProtoFieldDefaultValues=true \
+  --proto_path=${baseProtoDir} \
+  ${protoFile}`;
 
     try {
       const { stderr } = await execAsync(command);

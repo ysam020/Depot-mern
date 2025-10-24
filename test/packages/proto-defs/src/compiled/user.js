@@ -189,7 +189,7 @@ export const SignupRequest = {
     },
 };
 function createBaseSignupResponse() {
-    return { user: undefined };
+    return {};
 }
 export const SignupResponse = {
     encode(message, writer = new BinaryWriter()) {
@@ -308,7 +308,7 @@ export const SigninRequest = {
     },
 };
 function createBaseSigninResponse() {
-    return { user: undefined, accessToken: "", refreshToken: "" };
+    return { accessToken: "", refreshToken: "" };
 }
 export const SigninResponse = {
     encode(message, writer = new BinaryWriter()) {

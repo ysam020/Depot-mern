@@ -168,7 +168,6 @@ function createBaseOrder() {
     user_id: 0,
     total: 0,
     status: "",
-    created_at: undefined,
     order_items: [],
     payment_id: 0,
     shipping_address: "",
@@ -471,7 +470,7 @@ export const CreateOrderRequest = {
   },
 };
 function createBaseCreateOrderResponse() {
-  return { order: undefined, success: false, message: "" };
+  return { success: false, message: "" };
 }
 export const CreateOrderResponse = {
   encode(message, writer = new BinaryWriter()) {
@@ -612,7 +611,7 @@ export const GetOrderRequest = {
   },
 };
 function createBaseGetOrderResponse() {
-  return { order: undefined };
+  return {};
 }
 export const GetOrderResponse = {
   encode(message, writer = new BinaryWriter()) {
@@ -848,7 +847,7 @@ export const UpdateOrderStatusRequest = {
   },
 };
 function createBaseUpdateOrderStatusResponse() {
-  return { order: undefined, success: false, message: "" };
+  return { success: false, message: "" };
 }
 export const UpdateOrderStatusResponse = {
   encode(message, writer = new BinaryWriter()) {

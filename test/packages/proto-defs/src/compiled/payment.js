@@ -651,7 +651,6 @@ function createBaseVerifyPaymentRequest() {
         amount: 0,
         user_id: 0,
         cart_items: [],
-        shipping_address: undefined,
     };
 }
 export const VerifyPaymentRequest = {
@@ -799,7 +798,7 @@ export const VerifyPaymentRequest = {
     },
 };
 function createBaseVerifyPaymentResponse() {
-    return { success: false, message: "", payment: undefined };
+    return { success: false, message: "" };
 }
 export const VerifyPaymentResponse = {
     encode(message, writer = new BinaryWriter()) {
