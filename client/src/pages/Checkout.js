@@ -92,7 +92,7 @@ function Checkout() {
       const { data } = await axios.post(
         "http://localhost:9000/api/v1/payment/create-order",
         {
-          amount: totalAmount,
+          amount: Math.round(totalAmount * 100),
           currency: "INR",
           receipt: `receipt_${Date.now()}`,
         },
@@ -137,7 +137,7 @@ function Checkout() {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                amount: totalAmount,
+                amount: Math.round(totalAmount * 100),
                 cart_items: cartData.cart.map((item) => ({
                   id: item.id,
                   title: item.title,
