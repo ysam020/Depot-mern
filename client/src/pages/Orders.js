@@ -1,64 +1,47 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import CircularProgress from "@mui/material/CircularProgress";
 import "../styles/orders.css";
-import apiClient from "../config/axiosConfig";
+import { fetchOrders } from "../redux/features/orders/orders";
+import getStatusColor from "../utils/getStatusColor";
 
 function Orders() {
   const navigate = useNavigate();
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+
+  // Get orders state from Redux
+  const { loading, orders, error } = useSelector((state) => state.orders);
 
   useEffect(() => {
     document.title = "My Orders - Depot";
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
-    try {
-      const response = await apiClient.get("/orders");
-
-      if (response.data.success) {
-        setOrders(response.data.data.orders);
-      }
-    } catch (err) {
-      console.error("Error fetching orders:", err);
-      setError(err.response?.data?.error || "Failed to fetch orders");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Fetch orders when component mounts
+    dispatch(fetchOrders());
+  }, [dispatch]);
 
   const formatDate = (timestamp) => {
     if (!timestamp) return "N/A";
 
-    // Handle protobuf timestamp format
+    // Handle Firestore timestamp
     if (timestamp.seconds) {
-      const date = new Date(timestamp.seconds * 1000);
-      return date.toLocaleDateString("en-IN", {
+      return new Date(timestamp.seconds * 1000).toLocaleDateString("en-IN", {
         year: "numeric",
         month: "short",
         day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
       });
     }
 
-    // Handle regular date string
     const date = new Date(timestamp);
     return date.toLocaleDateString("en-IN", {
       year: "numeric",
       month: "short",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
   const formatAddress = (addressString) => {
-    if (!addressString) return "N/A";
+    if (!addressString) return null;
 
     try {
       const address = JSON.parse(addressString);
@@ -66,30 +49,6 @@ function Orders() {
     } catch {
       return addressString;
     }
-  };
-
-  const getStatusColor = (status) => {
-    const statusColors = {
-      pending: "#ffc107",
-      confirmed: "#28a745",
-      processing: "#17a2b8",
-      shipped: "#007bff",
-      delivered: "#28a745",
-      cancelled: "#dc3545",
-    };
-    return statusColors[status?.toLowerCase()] || "#6c757d";
-  };
-
-  const getStatusIcon = (status) => {
-    const statusIcons = {
-      pending: "⏳",
-      confirmed: "✅",
-      processing: "📦",
-      shipped: "🚚",
-      delivered: "✓",
-      cancelled: "❌",
-    };
-    return statusIcons[status?.toLowerCase()] || "•";
   };
 
   // Check if order can be tracked
@@ -115,7 +74,7 @@ function Orders() {
         <div className="error-container">
           <h3>Error</h3>
           <p>{error}</p>
-          <button onClick={fetchOrders} className="retry-btn">
+          <button onClick={() => dispatch(fetchOrders())} className="retry-btn">
             Retry
           </button>
         </div>
@@ -175,13 +134,12 @@ function Orders() {
                     <div className="order-info-item">
                       <span className="info-label">Status</span>
                       <span
-                        className="info-value order-status"
+                        className="info-value status-badge"
                         style={{
                           backgroundColor: getStatusColor(order.status),
                         }}
                       >
-                        {getStatusIcon(order.status)}{" "}
-                        {order.status?.toUpperCase()}
+                        {order.status}
                       </span>
                     </div>
                   </Col>
@@ -190,9 +148,8 @@ function Orders() {
                 <div className="order-divider"></div>
 
                 <div className="order-items">
-                  <h6 className="order-items-title">Items Ordered:</h6>
-                  {(order.orderItems || order.order_items || []).map(
-                    (item, index) => (
+                  {order.order_items &&
+                    order.order_items.map((item, index) => (
                       <Row key={index} className="order-item">
                         <Col xs={3} md={2}>
                           <img
@@ -201,25 +158,30 @@ function Orders() {
                             className="order-item-image"
                           />
                         </Col>
-                        <Col xs={6} md={7}>
-                          <div className="order-item-details">
-                            <h6 className="order-item-title">{item.title}</h6>
-                            <p className="order-item-quantity">
-                              Quantity: {item.quantity}
-                            </p>
-                          </div>
-                        </Col>
-                        <Col xs={3} md={3} className="text-end">
-                          <div className="order-item-price">
-                            <span className="price-label">Price:</span>
-                            <span className="price-value">
-                              ₹{item.price * item.quantity}
-                            </span>
-                          </div>
+                        <Col xs={9} md={10}>
+                          <Row>
+                            <Col xs={12} md={8}>
+                              <div className="item-info">
+                                <h6 className="order-item-title">
+                                  {item.title}
+                                </h6>
+                                <p className="order-item-details">
+                                  Quantity: {item.quantity}
+                                </p>
+                              </div>
+                            </Col>
+                            <Col xs={12} md={4} className="text-md-end">
+                              <div className="item-price">
+                                <span className="price-label">Price:</span>
+                                <span className="price-value">
+                                  ₹{item.price * item.quantity}
+                                </span>
+                              </div>
+                            </Col>
+                          </Row>
                         </Col>
                       </Row>
-                    )
-                  )}
+                    ))}
                 </div>
 
                 {(order.shippingAddress || order.shipping_address) && (

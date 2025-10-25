@@ -9,7 +9,7 @@ function useSelectors() {
   const wishlistData = useSelector((state) => state.wishlist);
   const productsData = useSelector((state) => state.products);
   const productDetails = useSelector((state) => state.productDetails);
-  const savedAddress = useSelector((state) => state.address);
+  const ordersData = useSelector((state) => state.orders);
 
   return {
     name,
@@ -19,7 +19,7 @@ function useSelectors() {
     wishlistData,
     productsData,
     productDetails,
-    savedAddress,
+    ordersData,
   };
 }
 

@@ -1,156 +1,42 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import CircularProgress from "@mui/material/CircularProgress";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import "../styles/trackOrder.css";
-import apiClient from "../config/axiosConfig";
+import {
+  trackOrder,
+  clearTrackingInfo,
+  clearCurrentOrder,
+} from "../redux/features/orders/orders";
+import getStatusColor from "../utils/getStatusColor";
 
 function TrackOrder() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [order, setOrder] = useState(null);
-  const [tracking, setTracking] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+
+  // Get order and tracking state from Redux
+  const {
+    loading,
+    currentOrder: order,
+    trackingInfo: tracking,
+    error,
+  } = useSelector((state) => state.orders);
 
   useEffect(() => {
     document.title = `Track Order #${id} - Depot`;
-    fetchOrderAndTracking();
-    // eslint-disable-next-line
-  }, [id]);
+    // Fetch tracking information when component mounts
+    dispatch(trackOrder(id));
 
-  const fetchOrderAndTracking = async () => {
-    try {
-      const orderResponse = await apiClient.get(`/orders/${id}`);
-
-      if (orderResponse.data.success) {
-        setOrder(orderResponse.data.data.order);
-        setTracking(generateMockTracking(orderResponse.data.data.order));
-      }
-    } catch (err) {
-      console.error("Error fetching order:", err);
-      setError(
-        err.response?.data?.error || "Failed to fetch tracking information"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateMockTracking = (orderData) => {
-    const baseDate = new Date(
-      orderData.createdAt?.seconds
-        ? orderData.createdAt.seconds * 1000
-        : orderData.created_at
-    );
-
-    const mockEvents = [];
-    const status = orderData.status?.toLowerCase();
-
-    mockEvents.push({
-      status: "Order Placed",
-      location: "Mumbai, Maharashtra",
-      date: baseDate,
-      description: "Your order has been placed successfully",
-      icon: "✓",
-      completed: true,
-    });
-
-    if (["confirmed", "processing", "shipped", "delivered"].includes(status)) {
-      const confirmedDate = new Date(baseDate);
-      confirmedDate.setHours(confirmedDate.getHours() + 1);
-      mockEvents.push({
-        status: "Order Confirmed",
-        location: "Warehouse, Mumbai",
-        date: confirmedDate,
-        description: "Your order has been confirmed and is being prepared",
-        icon: "✓",
-        completed: true,
-      });
-    }
-
-    if (["processing", "shipped", "delivered"].includes(status)) {
-      const processingDate = new Date(baseDate);
-      processingDate.setHours(processingDate.getHours() + 4);
-      mockEvents.push({
-        status: "Processing",
-        location: "Warehouse, Mumbai",
-        date: processingDate,
-        description: "Your order is being packed",
-        icon: "📦",
-        completed: true,
-      });
-    }
-
-    if (["shipped", "delivered"].includes(status)) {
-      const shippedDate = new Date(baseDate);
-      shippedDate.setDate(shippedDate.getDate() + 1);
-      mockEvents.push({
-        status: "Shipped",
-        location: "Mumbai Sorting Facility",
-        date: shippedDate,
-        description: "Your order has been shipped via Delhivery",
-        icon: "🚚",
-        completed: true,
-      });
-
-      const transitDate = new Date(shippedDate);
-      transitDate.setDate(transitDate.getDate() + 1);
-      mockEvents.push({
-        status: "In Transit",
-        location: "Pune, Maharashtra",
-        date: transitDate,
-        description: "Your package is on the way",
-        icon: "🚚",
-        completed: status === "delivered",
-      });
-    }
-
-    if (status === "delivered" || status === "shipped") {
-      const outForDeliveryDate = new Date(baseDate);
-      outForDeliveryDate.setDate(outForDeliveryDate.getDate() + 3);
-      mockEvents.push({
-        status: "Out for Delivery",
-        location: "Local Delivery Hub",
-        date: outForDeliveryDate,
-        description: "Your package is out for delivery",
-        icon: "🚚",
-        completed: status === "delivered",
-      });
-    }
-
-    if (status === "delivered") {
-      const deliveredDate = new Date(baseDate);
-      deliveredDate.setDate(deliveredDate.getDate() + 3);
-      deliveredDate.setHours(deliveredDate.getHours() + 4);
-      mockEvents.push({
-        status: "Delivered",
-        location: "Delivered to Customer",
-        date: deliveredDate,
-        description: "Your package has been delivered successfully",
-        icon: "✓",
-        completed: true,
-      });
-    }
-
-    const expectedDate = new Date(baseDate);
-    expectedDate.setDate(expectedDate.getDate() + 5);
-
-    return {
-      waybill: `TRACK${id}${Math.random()
-        .toString(36)
-        .substr(2, 6)
-        .toUpperCase()}`,
-      courier: "Delhivery",
-      currentStatus: status.charAt(0).toUpperCase() + status.slice(1),
-      expectedDelivery: expectedDate,
-      events: mockEvents,
+    // Clear tracking info when component unmounts
+    return () => {
+      dispatch(clearTrackingInfo());
+      dispatch(clearCurrentOrder());
     };
-  };
+  }, [dispatch, id]);
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -174,7 +60,7 @@ function TrackOrder() {
     );
   }
 
-  if (error || !order) {
+  if (error || !order || !tracking) {
     return (
       <Container className="track-order-page">
         <div className="error-container">
@@ -191,12 +77,6 @@ function TrackOrder() {
   return (
     <Container className="track-order-page">
       <div className="track-header">
-        <button
-          onClick={() => navigate(`/orders/${id}`)}
-          className="back-button"
-        >
-          <ArrowBackIcon /> Back to Order Details
-        </button>
         <h2>Track Your Order</h2>
       </div>
 
@@ -213,72 +93,57 @@ function TrackOrder() {
                 </Col>
                 <Col md={4} xs={6}>
                   <div className="tracking-info-item">
-                    <span className="info-label">Tracking ID</span>
-                    <span className="info-value tracking-id">
-                      {tracking?.waybill || "N/A"}
+                    <span className="info-label">Current Status</span>
+                    <span
+                      className="summary-value"
+                      style={{
+                        color: getStatusColor(order.status),
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "5px",
+                      }}
+                    >
+                      {tracking.currentStatus.toUpperCase()}
                     </span>
                   </div>
                 </Col>
                 <Col md={4} xs={12}>
                   <div className="tracking-info-item">
-                    <span className="info-label">Courier Partner</span>
-                    <span className="info-value">{tracking?.courier}</span>
+                    <span className="info-label">Expected Delivery</span>
+                    <span className="info-value">
+                      {formatDate(tracking.estimatedDelivery)}
+                    </span>
                   </div>
                 </Col>
               </Row>
             </Card.Body>
           </Card>
 
-          <Card className="current-status-card">
+          {/* Timeline */}
+          <Card className="tracking-timeline-card">
             <Card.Body>
-              <div className="status-header">
-                <LocalShippingIcon className="status-icon" />
-                <div className="status-text">
-                  <h5>{tracking?.currentStatus}</h5>
-                  <p>
-                    Expected delivery: {formatDate(tracking?.expectedDelivery)}
-                  </p>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-
-          <Card className="timeline-card">
-            <Card.Body>
-              <h5 className="timeline-title">Shipment Timeline</h5>
+              <h5 className="timeline-title">Order Timeline</h5>
               <div className="tracking-timeline">
-                {tracking?.events.map((event, index) => (
+                {tracking.events.map((event, index) => (
                   <div
                     key={index}
-                    className={`timeline-event ${
+                    className={`timeline-item ${
                       event.completed ? "completed" : "pending"
                     }`}
                   >
-                    <div className="event-marker">
-                      <div className="marker-icon">
-                        {event.completed ? (
-                          <CheckCircleIcon />
-                        ) : (
-                          <div className="pending-dot"></div>
-                        )}
-                      </div>
-                      {index < tracking.events.length - 1 && (
-                        <div className="marker-line"></div>
+                    <div className="timeline-marker">
+                      {event.completed ? (
+                        <CheckCircleIcon className="completed-icon" />
+                      ) : (
+                        <div className="pending-dot"></div>
                       )}
                     </div>
-                    <div className="event-content">
-                      <div className="event-header">
-                        <h6 className="event-status">
-                          {event.icon} {event.status}
-                        </h6>
-                        <span className="event-date">
-                          {formatDate(event.date)}
-                        </span>
-                      </div>
-                      <p className="event-description">{event.description}</p>
-                      <p className="event-location">
-                        <LocationOnIcon fontSize="small" /> {event.location}
+                    <div className="timeline-content">
+                      <h6 className="timeline-status">{event.status}</h6>
+                      <p className="timeline-description">
+                        {event.description}
                       </p>
+                      <p className="timeline-date">{formatDate(event.date)}</p>
                     </div>
                   </div>
                 ))}
@@ -288,73 +153,101 @@ function TrackOrder() {
         </Col>
 
         <Col md={4}>
+          {/* Order Summary */}
           <Card className="order-summary-sidebar">
             <Card.Body>
-              <h5 className="card-title">Order Summary</h5>
-              <div className="summary-items">
-                {(order.orderItems || order.order_items || []).map(
-                  (item, index) => (
-                    <div key={index} className="summary-item">
+              <h5 className="sidebar-title">Order Summary</h5>
+              <div className="summary-details">
+                <div className="summary-row">
+                  <span className="summary-label">Items:</span>
+                  <span className="summary-value">
+                    {order.items?.length || 0}
+                  </span>
+                </div>
+                <div className="summary-row">
+                  <span className="summary-label">Total:</span>
+                  <span className="summary-value">₹{order.total}</span>
+                </div>
+              </div>
+
+              {/* Order Items Preview */}
+              <div className="items-preview">
+                <h6 className="preview-title">Items in this order:</h6>
+                {order.items &&
+                  order.items.slice(0, 3).map((item, index) => (
+                    <div key={index} className="preview-item">
                       <img
                         src={item.image}
                         alt={item.title}
-                        className="summary-item-image"
+                        className="preview-image"
                       />
-                      <div className="summary-item-info">
-                        <p className="item-name">{item.title}</p>
-                        <p className="item-qty">Qty: {item.quantity}</p>
+                      <div className="preview-info">
+                        <p className="preview-item-title">{item.title}</p>
+                        <p className="preview-item-qty">Qty: {item.quantity}</p>
                       </div>
                     </div>
-                  )
+                  ))}
+                {order.items && order.items.length > 3 && (
+                  <p className="more-items">
+                    +{order.items.length - 3} more item(s)
+                  </p>
                 )}
               </div>
-              <div className="summary-total">
-                <span>Total Amount</span>
-                <span className="total-amount">₹{order.total}</span>
-              </div>
             </Card.Body>
           </Card>
 
-          <Card className="delivery-address-card">
-            <Card.Body>
-              <h5 className="card-title">Delivery Address</h5>
-              {(() => {
-                try {
-                  const address = JSON.parse(
-                    order.shippingAddress || order.shipping_address
-                  );
-                  return (
-                    <div className="address-content">
-                      <p className="address-name">
-                        <strong>
-                          {address.first_name} {address.last_name}
-                        </strong>
-                      </p>
-                      <p>{address.address}</p>
-                      <p>
-                        {address.city}, {address.state}
-                      </p>
-                      <p>PIN: {address.pincode}</p>
-                      <p>Phone: {address.phone}</p>
-                    </div>
-                  );
-                } catch {
-                  return (
-                    <p>{order.shippingAddress || order.shipping_address}</p>
-                  );
-                }
-              })()}
-            </Card.Body>
-          </Card>
+          {/* Shipping Address */}
+          {(order.shippingAddress || order.shipping_address) && (
+            <Card className="shipping-address-card">
+              <Card.Body>
+                <h5 className="sidebar-title">
+                  <LocationOnIcon className="location-icon" /> Shipping Address
+                </h5>
+                <div className="address-content">
+                  {(() => {
+                    try {
+                      const address = JSON.parse(
+                        order.shippingAddress || order.shipping_address
+                      );
+                      return (
+                        <>
+                          <p className="address-name">
+                            {address.first_name} {address.last_name}
+                          </p>
+                          <p className="address-line">{address.address}</p>
+                          <p className="address-line">
+                            {address.city}, {address.state} - {address.pincode}
+                          </p>
+                          <p className="address-phone">{address.phone}</p>
+                        </>
+                      );
+                    } catch {
+                      return (
+                        <p className="address-line">
+                          {order.shippingAddress || order.shipping_address}
+                        </p>
+                      );
+                    }
+                  })()}
+                </div>
+              </Card.Body>
+            </Card>
+          )}
 
+          {/* Help Section */}
           <Card className="help-card">
             <Card.Body>
-              <h5 className="card-title">Need Help?</h5>
+              <h5 className="sidebar-title">Need Help?</h5>
               <p className="help-text">
-                If you have any questions about your shipment, feel free to
-                contact us.
+                If you have any questions about your order, please contact our
+                support team.
               </p>
-              <button className="contact-btn">Contact Support</button>
+              <button
+                className="contact-btn"
+                onClick={() => navigate("/contact")}
+              >
+                Contact Support
+              </button>
             </Card.Body>
           </Card>
         </Col>
