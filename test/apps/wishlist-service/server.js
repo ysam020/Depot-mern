@@ -22,14 +22,12 @@ class WishlistService {
       title: wishlistItem.product.title,
       price: Math.floor(wishlistItem.product.price),
       image: wishlistItem.product.image,
-      quantity: 1, // Wishlists typically don't have quantities, defaulting to 1
+      quantity: 1,
     });
   }
 
   static async addToWishlist(call, callback) {
-    // asyncHandler automatically catches errors including JWT errors!
     await BaseGrpcService.asyncHandler(callback, async () => {
-      // getUserIdFromMetadata throws if auth fails - asyncHandler catches it
       const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
       const { id: productId } = call.request;
 
@@ -115,7 +113,6 @@ class WishlistService {
         WishlistService.mapWishlistItem(item)
       );
 
-      // Cleaner response creation
       callback(
         null,
         BaseGrpcService.successResponse(GetWishlistResponse, {

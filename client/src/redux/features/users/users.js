@@ -127,9 +127,9 @@ export const login = createAsyncThunk(
         "http://localhost:9000/api/v1/auth/signin",
         values
       );
-      const data = res.data;
+      const data = res.data.data;
 
-      if (data.success) {
+      if (res.data.success) {
         const userData = {
           id: data.user.id,
           name: data.user.name,

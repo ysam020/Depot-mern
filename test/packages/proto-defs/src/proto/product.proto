@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package products;
 
-// Product model
 message Product {
   int32 id = 1;
   string title = 2;
@@ -21,28 +20,23 @@ message Product {
   int32 qty = 15;
 }
 
-// Request to get a product by ID
 message GetProductRequest {
   int32 id = 1;
 }
 
-// Response containing a product
 message GetProductResponse {
   Product product = 1;
 }
 
-// Request to list products
 message ListProductsRequest {
   int32 limit = 1;
   int32 offset = 2;
 }
 
-// Response containing multiple products
 message ListProductsResponse {
   repeated Product products = 1;
 }
 
-// Product Service definition
 service ProductService {
   rpc GetProduct(GetProductRequest) returns (GetProductResponse);
   rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);

@@ -12,14 +12,10 @@ export const fetchProducts = createAsyncThunk(
   async ({ filterCategory, sortCategory }, { rejectWithValue }) => {
     try {
       const res = await apiClient("/products");
-
       let data = [];
 
-      if (res.data.success && Array.isArray(res.data.data)) {
-        data = res.data.data;
-      } else if (Array.isArray(res.data)) {
-        // Fallback for plain array response
-        data = res.data;
+      if (res.data.success) {
+        data = res.data.data.products;
       }
 
       // Filter

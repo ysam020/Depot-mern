@@ -1,74 +1,66 @@
 import express from "express";
 import { ProductServiceClient } from "@depot/proto-defs/product";
-import grpc from "@grpc/grpc-js";
-import dotenv from "dotenv";
-dotenv.config({ quiet: true });
-
-const PRODUCT_SERVICE_ADDRESS = process.env.PRODUCT_SERVICE_ADDRESS;
-
-const productClient = new ProductServiceClient(
-  PRODUCT_SERVICE_ADDRESS,
-  grpc.credentials.createInsecure()
-);
+import {
+  grpcClientManager,
+  GrpcErrorHandler,
+  ResponseFormatter,
+} from "@depot/grpc-utils";
 
 const router = express.Router();
+
+// Get gRPC client
+const productClient = grpcClientManager.getClient(
+  "PRODUCT_SERVICE",
+  ProductServiceClient
+);
 
 // List all products
 router.get("/", (req, res) => {
   const limit = parseInt(req.query.limit) || 100;
   const offset = parseInt(req.query.offset) || 0;
 
-  productClient.listProducts({ limit, offset }, (err, response) => {
-    if (err) {
-      console.error("gRPC Error (listProducts):", err);
-      return res.status(500).json({
-        success: false,
-        error: err.message,
-      });
-    }
-
-    res.json({
-      success: true,
-      data: response.products || [],
-      message: "Products fetched successfully",
-    });
-  });
+  productClient.listProducts(
+    { limit, offset },
+    GrpcErrorHandler.wrapCallback(
+      res,
+      (response) => {
+        ResponseFormatter.success(
+          res,
+          { products: response.products || [] },
+          "Products fetched successfully"
+        );
+      },
+      "Failed to fetch products"
+    )
+  );
 });
 
 // Get product by ID
 router.get("/:id", (req, res) => {
   const id = parseInt(req.params.id, 10);
 
-  productClient.getProduct({ id }, (err, response) => {
-    if (err) {
-      console.error("gRPC Error (getProduct):", err);
+  if (isNaN(id)) {
+    return ResponseFormatter.validationError(res, { id: "Invalid product ID" });
+  }
 
-      if (err.code === grpc.status.NOT_FOUND) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found",
-        });
-      }
+  productClient.getProduct(
+    { id },
+    GrpcErrorHandler.wrapCallback(
+      res,
+      (response) => {
+        if (!response?.product) {
+          return ResponseFormatter.notFound(res, "Product not found");
+        }
 
-      return res.status(500).json({
-        success: false,
-        error: err.message,
-      });
-    }
-
-    if (!response?.product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      data: response.product,
-      message: "Product fetched successfully",
-    });
-  });
+        ResponseFormatter.success(
+          res,
+          { product: response.product },
+          "Product fetched successfully"
+        );
+      },
+      "Failed to fetch product"
+    )
+  );
 });
 
 export default router;

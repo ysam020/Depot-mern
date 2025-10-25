@@ -24,7 +24,6 @@ const VALID_ORDER_STATUSES = [
 
 class OrderService {
   static formatOrderResponse(order) {
-    // Ensure we have a proper Date object
     const dateObj =
       order.created_at instanceof Date
         ? order.created_at
@@ -54,7 +53,6 @@ class OrderService {
 
   static async createOrder(call, callback) {
     await BaseGrpcService.asyncHandler(callback, async () => {
-      // getUserIdFromMetadata throws if auth fails - asyncHandler catches it
       const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
 
       const { items, total, payment_id, shipping_address } = call.request;

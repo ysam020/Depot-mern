@@ -9,11 +9,11 @@ import { jwtMiddleware } from "../middlewares/auth.js";
 
 const rootRouter = Router();
 
-// Public routes (no authentication required)
+// Public routes
 rootRouter.use("/auth", authRouter);
 rootRouter.use("/products", productRouter);
 
-// Protected routes (authentication required)
+// Protected routes
 rootRouter.use("/cart", jwtMiddleware, cartRouter);
 rootRouter.use("/wishlist", jwtMiddleware, wishlistRouter);
 rootRouter.use("/payment", jwtMiddleware, paymentRouter);

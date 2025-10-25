@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package users;
 
-// User model
 message User {
   int32 id = 1;
   string name = 2;
@@ -10,37 +9,31 @@ message User {
   string password = 4;
 }
 
-// Request to signup
 message SignupRequest {
   string name = 1;
   string email = 2;
   string password = 3;
 }
 
-// Response containing a user
 message SignupResponse {
   User user = 1;
 }
 
-// Request to signin
 message SigninRequest {
   string email = 1;
   string password = 2;
 }
 
-// Response after signin with tokens
 message SigninResponse {
   User user = 1;
   string accessToken = 2;
   string refreshToken = 3;
 }
 
-// Request to refresh token
 message RefreshTokenRequest {
   string refreshToken = 1;
 }
 
-// Response with new tokens
 message RefreshTokenResponse {
   string accessToken = 1;
   string refreshToken = 2;
@@ -48,7 +41,6 @@ message RefreshTokenResponse {
   string message = 4;
 }
 
-// Auth Service definition
 service AuthService {
   rpc Signin(SigninRequest) returns (SigninResponse);
   rpc Signup(SignupRequest) returns (SignupResponse);

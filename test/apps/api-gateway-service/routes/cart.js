@@ -1,46 +1,44 @@
 import express from "express";
-import grpc from "@grpc/grpc-js";
 import { CartServiceClient } from "@depot/proto-defs/cart";
-import dotenv from "dotenv";
-dotenv.config({ quiet: true });
+import {
+  grpcClientManager,
+  GrpcClientManager,
+  GrpcErrorHandler,
+  ResponseFormatter,
+} from "@depot/grpc-utils";
 
 const router = express.Router();
-const CART_SERVICE_ADDRESS = process.env.CART_SERVICE_ADDRESS;
 
-const cartClient = new CartServiceClient(
-  CART_SERVICE_ADDRESS,
-  grpc.credentials.createInsecure()
+// Get gRPC client
+const cartClient = grpcClientManager.getClient(
+  "CART_SERVICE",
+  CartServiceClient
 );
-
-// Helper to attach JWT to gRPC metadata
-function createMetadata(req) {
-  const metadata = new grpc.Metadata();
-  if (req.headers.authorization) {
-    metadata.add("authorization", req.headers.authorization);
-  }
-  return metadata;
-}
 
 // Add to cart
 router.post("/", (req, res) => {
   const { id, quantity = 1 } = req.body;
+
+  if (!id) {
+    return ResponseFormatter.validationError(res, {
+      id: "Product ID is required",
+    });
+  }
+
   cartClient.addToCart(
     { id, quantity },
-    createMetadata(req),
-    (err, response) => {
-      if (err) {
-        console.error("Add to cart error:", err);
-        return res.status(500).json({
-          success: false,
-          error: err.message,
-        });
-      }
-      res.json({
-        success: true,
-        data: response.cart,
-        message: "Product added to cart",
-      });
-    }
+    GrpcClientManager.createMetadata(req), // Static method
+    GrpcErrorHandler.wrapCallback(
+      res,
+      (response) => {
+        ResponseFormatter.success(
+          res,
+          { cart: response.cart },
+          "Product added to cart"
+        );
+      },
+      "Failed to add product to cart"
+    )
   );
 });
 
@@ -49,23 +47,26 @@ router.put("/:id", (req, res) => {
   const { id } = req.params;
   const { quantity } = req.body;
 
+  if (!quantity) {
+    return ResponseFormatter.validationError(res, {
+      quantity: "Quantity is required",
+    });
+  }
+
   cartClient.updateCart(
     { id: parseInt(id), quantity },
-    createMetadata(req),
-    (err, response) => {
-      if (err) {
-        console.error("Update cart error:", err);
-        return res.status(500).json({
-          success: false,
-          error: err.message,
-        });
-      }
-      res.json({
-        success: true,
-        data: response.cart,
-        message: "Cart updated successfully",
-      });
-    }
+    GrpcClientManager.createMetadata(req),
+    GrpcErrorHandler.wrapCallback(
+      res,
+      (response) => {
+        ResponseFormatter.success(
+          res,
+          { carts: response.carts },
+          "Cart updated successfully"
+        );
+      },
+      "Failed to update cart"
+    )
   );
 });
 
@@ -75,45 +76,37 @@ router.delete("/:id", (req, res) => {
 
   cartClient.deleteCart(
     { id: parseInt(id) },
-    createMetadata(req),
-    (err, response) => {
-      if (err) {
-        console.error("Delete from cart error:", err);
-        return res.status(500).json({
-          success: false,
-          error: err.message,
-        });
-      }
-      res.json({
-        success: true,
-        data: response.cart,
-        message: "Product removed from cart",
-      });
-    }
+    GrpcClientManager.createMetadata(req),
+    GrpcErrorHandler.wrapCallback(
+      res,
+      (response) => {
+        ResponseFormatter.success(
+          res,
+          { cart: response.cart },
+          "Product removed from cart"
+        );
+      },
+      "Failed to remove product from cart"
+    )
   );
 });
 
-// Get all cart items
+// Get cart
 router.get("/", (req, res) => {
   cartClient.getCart(
-    {}, // Empty request object since GetCartRequest is empty
-    createMetadata(req), // JWT is passed in metadata
-    (err, response) => {
-      if (err) {
-        console.error("Get cart error:", err);
-        return res.status(500).json({
-          success: false,
-          error: err.message,
-        });
-      }
-
-      // response.carts is the array from proto
-      res.json({
-        success: true,
-        data: response.carts || [],
-        message: "Cart fetched successfully",
-      });
-    }
+    {},
+    GrpcClientManager.createMetadata(req),
+    GrpcErrorHandler.wrapCallback(
+      res,
+      (response) => {
+        ResponseFormatter.success(
+          res,
+          { carts: response.carts || [] },
+          "Cart fetched successfully"
+        );
+      },
+      "Failed to fetch cart"
+    )
   );
 });
 

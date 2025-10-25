@@ -21,7 +21,7 @@ function Orders() {
       const response = await apiClient.get("/orders");
 
       if (response.data.success) {
-        setOrders(response.data.data || []);
+        setOrders(response.data.data.orders);
       }
     } catch (err) {
       console.error("Error fetching orders:", err);

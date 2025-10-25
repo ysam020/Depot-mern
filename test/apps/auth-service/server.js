@@ -20,15 +20,11 @@ if (!JWT_SECRET) {
 }
 
 class AuthService {
-  // No need to extend BaseGrpcService anymore!
-  // No constructor needed - createService handles it!
-
   static async signup(call, callback) {
-    // Using asyncHandler - automatic error handling!
     await BaseGrpcService.asyncHandler(callback, async () => {
       const { name, email, password } = call.request;
 
-      // Validate and send error in one step!
+      // Validate and send
       if (
         BaseGrpcService.validateAndSendError(
           callback,
@@ -36,7 +32,7 @@ class AuthService {
           ["name", "email", "password"]
         )
       ) {
-        return; // Error already sent!
+        return;
       }
 
       // Check if user already exists
@@ -67,7 +63,6 @@ class AuthService {
       // Remove password from response
       const { password: _, ...safeUser } = user;
 
-      // Using successResponse helper - cleaner!
       callback(
         null,
         BaseGrpcService.successResponse(SignupResponse, { user: safeUser })
@@ -79,7 +74,7 @@ class AuthService {
     await BaseGrpcService.asyncHandler(callback, async () => {
       const { email, password } = call.request;
 
-      // Validate and send error in one step!
+      // Validate and send error
       if (
         BaseGrpcService.validateAndSendError(callback, { email, password }, [
           "email",
@@ -125,7 +120,6 @@ class AuthService {
         expiresIn: "7d",
       });
 
-      // Cleaner response creation
       callback(
         null,
         BaseGrpcService.successResponse(SigninResponse, {
@@ -141,7 +135,7 @@ class AuthService {
     await BaseGrpcService.asyncHandler(callback, async () => {
       const { refreshToken } = call.request;
 
-      // Validate and send error in one step!
+      // Validate and send error
       if (
         BaseGrpcService.validateAndSendError(callback, { refreshToken }, [
           "refreshToken",

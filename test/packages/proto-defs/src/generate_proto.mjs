@@ -53,7 +53,7 @@ async function generateProtos() {
     console.log(`   - ${path.basename(file)}`);
   });
 
-  // FIX: Try multiple possible locations for ts-proto
+  // Multiple possible locations for ts-proto
   const possiblePaths = [
     path.resolve(__dirname, "../../node_modules/.bin/protoc-gen-ts_proto"), // In proto-defs
     path.resolve(__dirname, "../../../node_modules/.bin/protoc-gen-ts_proto"), // In monorepo root

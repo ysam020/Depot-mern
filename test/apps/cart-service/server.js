@@ -40,7 +40,6 @@ class CartService {
   }
 
   static async addToCart(call, callback) {
-    // asyncHandler automatically catches errors!
     await BaseGrpcService.asyncHandler(callback, async () => {
       const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
       const { id: productId, quantity = 1 } = call.request;
@@ -69,7 +68,6 @@ class CartService {
         });
       }
 
-      // Cleaner response creation
       callback(
         null,
         BaseGrpcService.successResponse(AddToCartResponse, {
@@ -117,7 +115,6 @@ class CartService {
           })
         ) || [];
 
-      // Cleaner response creation
       callback(
         null,
         BaseGrpcService.successResponse(UpdateCartResponse, { carts })
@@ -146,7 +143,6 @@ class CartService {
         where: { cart_id: cart.id, product_id: productId },
       });
 
-      // Cleaner response - no intermediate successResponse object
       callback(
         null,
         BaseGrpcService.successResponse(DeleteCartResponse, { cart: null })
@@ -157,16 +153,6 @@ class CartService {
   static async getCart(call, callback) {
     await BaseGrpcService.asyncHandler(callback, async () => {
       const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
-
-      // getUserIdFromMetadata already throws if userId is missing,
-      // so this check is redundant but kept for explicit validation
-      if (!userId) {
-        return BaseGrpcService.sendError(
-          callback,
-          grpc.status.INVALID_ARGUMENT,
-          "User ID missing"
-        );
-      }
 
       const cart = await prisma.carts.findUnique({
         where: { user_id: userId },
@@ -184,7 +170,6 @@ class CartService {
           })
         ) || [];
 
-      // Cleaner response creation
       callback(
         null,
         BaseGrpcService.successResponse(GetCartResponse, { carts })
@@ -221,7 +206,6 @@ class CartService {
         where: { cart_id: cart.id },
       });
 
-      // Cleaner response creation
       callback(
         null,
         BaseGrpcService.successResponse(GetCartResponse, { carts: [] })

@@ -28,8 +28,8 @@ function TrackOrder() {
       const orderResponse = await apiClient.get(`/orders/${id}`);
 
       if (orderResponse.data.success) {
-        setOrder(orderResponse.data.data);
-        setTracking(generateMockTracking(orderResponse.data.data));
+        setOrder(orderResponse.data.data.order);
+        setTracking(generateMockTracking(orderResponse.data.data.order));
       }
     } catch (err) {
       console.error("Error fetching order:", err);

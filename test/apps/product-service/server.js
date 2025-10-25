@@ -9,7 +9,6 @@ import { BaseGrpcService } from "@depot/grpc-utils";
 
 class ProductService {
   static async getProduct(call, callback) {
-    // asyncHandler automatically catches errors!
     await BaseGrpcService.asyncHandler(callback, async () => {
       const { id } = call.request;
 
@@ -25,7 +24,6 @@ class ProductService {
         );
       }
 
-      // Cleaner response creation
       callback(
         null,
         BaseGrpcService.successResponse(GetProductResponse, { product })
@@ -37,7 +35,6 @@ class ProductService {
     await BaseGrpcService.asyncHandler(callback, async () => {
       const products = await prisma.products.findMany();
 
-      // Cleaner response creation
       callback(
         null,
         BaseGrpcService.successResponse(ListProductsResponse, { products })

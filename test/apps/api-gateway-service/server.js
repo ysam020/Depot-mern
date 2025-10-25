@@ -6,7 +6,7 @@ const app = express();
 
 // CORS Configuration
 const corsOptions = {
-  origin: process.env.CLIENT_URL || "http://localhost:3000", // Your frontend URL
+  origin: process.env.CLIENT_URL || "http://localhost:3000",
   credentials: true, // Allow cookies and authorization headers
   optionsSuccessStatus: 200,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],

@@ -87,7 +87,6 @@ class PaymentService {
         receipt: receipt || `receipt_${Date.now()}`,
       });
 
-      // Cleaner response creation
       callback(
         null,
         BaseGrpcService.successResponse(CreateOrderResponse, {
