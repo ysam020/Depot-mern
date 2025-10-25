@@ -38,7 +38,6 @@ function getUserIdFromToken(req) {
 // Get all orders for logged-in user
 router.get("/", (req, res) => {
   const user_id = getUserIdFromToken(req);
-
   if (!user_id) {
     return res.status(401).json({
       success: false,
@@ -48,7 +47,7 @@ router.get("/", (req, res) => {
 
   // Use camelCase for TypeScript generated client
   orderClient.listOrdersByUser(
-    { userId: user_id }, // ✅ camelCase
+    { user_id },
     createMetadata(req),
     (err, response) => {
       if (err) {
@@ -92,7 +91,7 @@ router.get("/:id", (req, res) => {
       }
 
       // Verify order belongs to user (response uses camelCase)
-      if (response.order.userId !== user_id) {
+      if (response.order.user_id !== user_id) {
         return res.status(403).json({
           success: false,
           message: "Access denied",
@@ -130,7 +129,7 @@ router.post("/create", (req, res) => {
   // Convert to camelCase for TypeScript generated client
   orderClient.createOrder(
     {
-      userId: user_id, // ✅ camelCase
+      userId: user_id, // camelCase
       items: items.map((item) => ({
         id: 0,
         orderId: 0,
@@ -141,8 +140,8 @@ router.post("/create", (req, res) => {
         image: item.image || "",
       })),
       total,
-      paymentId: payment_id, // ✅ camelCase
-      shippingAddress: JSON.stringify(shipping_address), // ✅ camelCase
+      paymentId: payment_id, // camelCase
+      shippingAddress: JSON.stringify(shipping_address), // camelCase
     },
     createMetadata(req),
     (err, response) => {

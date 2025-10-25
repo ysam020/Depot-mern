@@ -1,10 +1,6 @@
 import grpc from "@grpc/grpc-js";
 import prisma from "@depot/prisma";
-import {
-  getUserIdFromMetadata,
-  successResponse,
-  errorResponse,
-} from "@depot/grpc-utils";
+import { getUserIdFromMetadata } from "@depot/grpc-utils";
 import {
   WishlistServiceService,
   AddToWishlistResponse,
@@ -19,29 +15,7 @@ dotenv.config({ quiet: true });
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-class WishlistService extends BaseGrpcService {
-  constructor() {
-    const serviceImpl = {
-      addToWishlist: BaseGrpcService.wrapHandler(WishlistService.addToWishlist),
-      removeFromWishlist: BaseGrpcService.wrapHandler(
-        WishlistService.removeFromWishlist
-      ),
-      getWishlist: BaseGrpcService.wrapHandler(WishlistService.getWishlist),
-    };
-
-    super("WishlistService", WishlistServiceService, serviceImpl, {
-      port: process.env.WISHLIST_SERVICE_PORT || 50055,
-    });
-  }
-
-  static getUserId(metadata) {
-    const userId = getUserIdFromMetadata(metadata, JWT_SECRET);
-    if (!userId) {
-      throw new Error("User not authenticated");
-    }
-    return userId;
-  }
-
+class WishlistService {
   static mapWishlistItem(wishlistItem) {
     return WishlistMessage.fromPartial({
       id: wishlistItem.product.id,
@@ -53,93 +27,113 @@ class WishlistService extends BaseGrpcService {
   }
 
   static async addToWishlist(call, callback) {
-    const userId = WishlistService.getUserId(call.metadata);
-    const { id: productId } = call.request;
+    // asyncHandler automatically catches errors including JWT errors!
+    await BaseGrpcService.asyncHandler(callback, async () => {
+      // getUserIdFromMetadata throws if auth fails - asyncHandler catches it
+      const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
+      const { id: productId } = call.request;
 
-    // Check if product already in wishlist
-    const existingItem = await prisma.wishlists.findFirst({
-      where: {
-        user_id: userId,
-        product_id: productId,
-      },
-    });
+      // Check if product already in wishlist
+      const existingItem = await prisma.wishlists.findFirst({
+        where: {
+          user_id: userId,
+          product_id: productId,
+        },
+      });
 
-    if (existingItem) {
-      return BaseGrpcService.sendError(
-        callback,
-        grpc.status.ALREADY_EXISTS,
-        "Product already in wishlist"
+      if (existingItem) {
+        return BaseGrpcService.sendError(
+          callback,
+          grpc.status.ALREADY_EXISTS,
+          "Product already in wishlist"
+        );
+      }
+
+      // Add product to wishlist
+      const wishlistItem = await prisma.wishlists.create({
+        data: {
+          user_id: userId,
+          product_id: productId,
+        },
+        include: { product: true },
+      });
+
+      // Cleaner response creation
+      callback(
+        null,
+        BaseGrpcService.successResponse(AddToWishlistResponse, {
+          wishlist: [WishlistService.mapWishlistItem(wishlistItem)],
+        })
       );
-    }
-
-    // Add product to wishlist
-    const wishlistItem = await prisma.wishlists.create({
-      data: {
-        user_id: userId,
-        product_id: productId,
-      },
-      include: { product: true },
     });
-
-    const response = successResponse(
-      { wishlist: [WishlistService.mapWishlistItem(wishlistItem)] },
-      "Product added to wishlist successfully"
-    );
-    callback(null, AddToWishlistResponse.fromPartial(response.data));
   }
 
   static async removeFromWishlist(call, callback) {
-    const userId = WishlistService.getUserId(call.metadata);
-    const { id: productId } = call.request;
+    await BaseGrpcService.asyncHandler(callback, async () => {
+      const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
+      const { id: productId } = call.request;
 
-    // Remove from wishlist
-    await prisma.wishlists.deleteMany({
-      where: {
-        user_id: userId,
-        product_id: productId,
-      },
+      // Remove from wishlist
+      await prisma.wishlists.deleteMany({
+        where: {
+          user_id: userId,
+          product_id: productId,
+        },
+      });
+
+      // Fetch remaining wishlist items
+      const userWishlists = await prisma.wishlists.findMany({
+        where: { user_id: userId },
+        include: { product: true },
+      });
+
+      const wishlists = userWishlists.map((item) =>
+        WishlistService.mapWishlistItem(item)
+      );
+
+      // Cleaner response creation
+      callback(
+        null,
+        BaseGrpcService.successResponse(RemoveFromWishlistResponse, {
+          wishlist: wishlists,
+        })
+      );
     });
-
-    // Fetch remaining wishlist items
-    const userWishlists = await prisma.wishlists.findMany({
-      where: { user_id: userId },
-      include: { product: true },
-    });
-
-    const wishlists = userWishlists.map((item) =>
-      WishlistService.mapWishlistItem(item)
-    );
-
-    const response = successResponse(
-      { wishlist: wishlists },
-      "Product removed from wishlist successfully"
-    );
-    callback(null, RemoveFromWishlistResponse.fromPartial(response.data));
   }
 
   static async getWishlist(call, callback) {
-    const userId = WishlistService.getUserId(call.metadata);
+    await BaseGrpcService.asyncHandler(callback, async () => {
+      const userId = getUserIdFromMetadata(call.metadata, JWT_SECRET);
 
-    // Fetch all wishlist items for the user
-    const userWishlists = await prisma.wishlists.findMany({
-      where: { user_id: userId },
-      include: { product: true },
+      // Fetch all wishlist items for the user
+      const userWishlists = await prisma.wishlists.findMany({
+        where: { user_id: userId },
+        include: { product: true },
+      });
+
+      const wishlists = userWishlists.map((item) =>
+        WishlistService.mapWishlistItem(item)
+      );
+
+      // Cleaner response creation
+      callback(
+        null,
+        BaseGrpcService.successResponse(GetWishlistResponse, {
+          wishlist: wishlists,
+        })
+      );
     });
-
-    const wishlists = userWishlists.map((item) =>
-      WishlistService.mapWishlistItem(item)
-    );
-
-    const response = successResponse(
-      { wishlist: wishlists },
-      "Wishlist fetched successfully"
-    );
-    callback(null, GetWishlistResponse.fromPartial(response.data));
   }
 }
 
+const wishlistService = BaseGrpcService.createService(
+  "WishlistService",
+  WishlistServiceService,
+  WishlistService,
+  { port: process.env.WISHLIST_SERVICE_PORT || 50055 }
+);
+
 // Start the server
-const wishlistService = new WishlistService();
 wishlistService.start().catch((err) => {
   console.error("Failed to start WishlistService:", err);
   process.exit(1);

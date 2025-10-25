@@ -27,33 +27,33 @@ async function getAllProtoFiles(dir) {
 
 async function generateProtos() {
   console.log(
-    "\n🔧 [@depot/proto-defs] Starting proto generation with ts-proto...\n"
+    "\n[@depot/proto-defs] Starting proto generation with ts-proto...\n"
   );
 
   const baseProtoDir = path.resolve(__dirname, "proto");
   const baseGeneratedDir = path.resolve(__dirname, "generated");
 
-  console.log("📁 Proto directory:", baseProtoDir);
-  console.log("📁 Output directory:", baseGeneratedDir);
+  console.log("Proto directory:", baseProtoDir);
+  console.log("Output directory:", baseGeneratedDir);
 
   if (!fs.existsSync(baseGeneratedDir)) {
     fs.mkdirSync(baseGeneratedDir, { recursive: true });
-    console.log("✅ Created generated directory\n");
+    console.log("Created generated directory\n");
   }
 
   const protoFiles = await getAllProtoFiles(baseProtoDir);
 
   if (protoFiles.length === 0) {
-    console.error("❌ No proto files found in", baseProtoDir);
+    console.error("No proto files found in", baseProtoDir);
     process.exit(1);
   }
 
-  console.log(`📝 Found ${protoFiles.length} proto file(s):`);
+  console.log(`Found ${protoFiles.length} proto file(s):`);
   protoFiles.forEach((file) => {
     console.log(`   - ${path.basename(file)}`);
   });
 
-  // ✅ FIX: Try multiple possible locations for ts-proto
+  // FIX: Try multiple possible locations for ts-proto
   const possiblePaths = [
     path.resolve(__dirname, "../../node_modules/.bin/protoc-gen-ts_proto"), // In proto-defs
     path.resolve(__dirname, "../../../node_modules/.bin/protoc-gen-ts_proto"), // In monorepo root
@@ -68,13 +68,10 @@ async function generateProtos() {
   }
 
   if (!tsProtoPath) {
-    console.error("❌ protoc-gen-ts_proto not found!");
+    console.error("protoc-gen-ts_proto not found!");
     console.error("   Please install: npm install --save-dev ts-proto");
     process.exit(1);
   }
-
-  console.log("🔌 Using ts-proto plugin:", tsProtoPath);
-  console.log("\n🔄 Generating TypeScript code...\n");
 
   let successCount = 0;
   let failCount = 0;
@@ -82,7 +79,7 @@ async function generateProtos() {
   for (const protoFile of protoFiles) {
     const relativePath = path.relative(baseProtoDir, protoFile);
 
-    process.stdout.write(`⚙️  Processing ${relativePath}... `);
+    process.stdout.write(`Processing ${relativePath}... `);
 
     const command = `protoc \
   --plugin=protoc-gen-ts_proto=${tsProtoPath} \
@@ -111,10 +108,8 @@ async function generateProtos() {
         console.error("\n", stderr);
       }
 
-      console.log("✅");
       successCount++;
     } catch (error) {
-      console.log("❌");
       console.error(`\n   Error: ${error.message}`);
       if (error.stderr) {
         const errorLines = error.stderr
@@ -136,9 +131,9 @@ async function generateProtos() {
 
   console.log("\n" + "=".repeat(50));
   if (failCount === 0) {
-    console.log(`✅ All ${successCount} proto file(s) generated successfully!`);
+    console.log(`All ${successCount} proto file(s) generated successfully!`);
   } else {
-    console.log(`⚠️  ${successCount} succeeded, ${failCount} failed`);
+    console.log(`${successCount} succeeded, ${failCount} failed`);
   }
   console.log("=".repeat(50) + "\n");
 
@@ -147,17 +142,16 @@ async function generateProtos() {
       .readdirSync(baseGeneratedDir)
       .filter((f) => f.endsWith(".ts"));
     if (generatedFiles.length > 0) {
-      console.log("📦 Generated files:");
+      console.log("Generated files:");
       generatedFiles.forEach((file) => {
         const filePath = path.join(baseGeneratedDir, file);
         const stats = fs.statSync(filePath);
         const size = (stats.size / 1024).toFixed(2);
-        console.log(`   ✓ ${file} (${size} KB)`);
       });
     }
   }
 
-  console.log("\n🎉 Proto generation complete!\n");
+  console.log("\nProto generation complete!\n");
 
   if (failCount > 0) {
     process.exit(1);
@@ -165,7 +159,7 @@ async function generateProtos() {
 }
 
 generateProtos().catch((error) => {
-  console.error("\n❌ Generation failed:", error.message);
+  console.error("\nGeneration failed:", error.message);
   console.error(error);
   process.exit(1);
 });

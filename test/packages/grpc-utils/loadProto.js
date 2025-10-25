@@ -23,15 +23,15 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const loadProto = (protoName) => {
-  // ✅ Correct path structure
+  // Correct path structure
   const protoPath = path.resolve(
     __dirname,
-    `../proto-defs/src/proto/${protoName}.proto` // ✅ /src/proto/
+    `../proto-defs/src/proto/${protoName}.proto` // /src/proto/
   );
 
   const protoDir = path.resolve(
     __dirname,
-    "../proto-defs/src/proto" // ✅ /src/proto/
+    "../proto-defs/src/proto" // /src/proto/
   );
 
   const packageDef = protoLoader.loadSync(protoPath, {
