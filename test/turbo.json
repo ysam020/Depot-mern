@@ -1,0 +1,22 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "ui": "tui",
+  "tasks": {
+    "proto:gen": {
+      "cache": false,
+      "inputs": ["src/proto/**/*.proto"],
+      "outputs": ["src/generated/**"]
+    },
+    "proto:compile": {
+      "dependsOn": ["proto:gen"],
+      "cache": false,
+      "inputs": ["src/generated/**/*.ts", "tsconfig.json"],
+      "outputs": ["src/compiled/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

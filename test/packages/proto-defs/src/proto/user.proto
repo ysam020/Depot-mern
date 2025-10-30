@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package users;
+
+message User {
+  int32 id = 1;
+  string name = 2;
+  string email = 3;
+  string password = 4;
+}
+
+message SignupRequest {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message SignupResponse {
+  User user = 1;
+}
+
+message SigninRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message SigninResponse {
+  User user = 1;
+  string accessToken = 2;
+  string refreshToken = 3;
+}
+
+message RefreshTokenRequest {
+  string refreshToken = 1;
+}
+
+message RefreshTokenResponse {
+  string accessToken = 1;
+  string refreshToken = 2;
+  bool success = 3;
+  string message = 4;
+}
+
+service AuthService {
+  rpc Signin(SigninRequest) returns (SigninResponse);
+  rpc Signup(SignupRequest) returns (SignupResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+}

@@ -1,0 +1,47 @@
+{
+  "name": "@depot/proto-defs",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "main": "./src/compiled/index.js",
+  "types": "./src/compiled/index.d.ts",
+  "exports": {
+    "./cart": {
+      "types": "./src/compiled/cart.d.ts",
+      "default": "./src/compiled/cart.js"
+    },
+    "./order": {
+      "types": "./src/compiled/order.d.ts",
+      "default": "./src/compiled/order.js"
+    },
+    "./payment": {
+      "types": "./src/compiled/payment.d.ts",
+      "default": "./src/compiled/payment.js"
+    },
+    "./product": {
+      "types": "./src/compiled/product.d.ts",
+      "default": "./src/compiled/product.js"
+    },
+    "./user": {
+      "types": "./src/compiled/user.d.ts",
+      "default": "./src/compiled/user.js"
+    },
+    "./wishlist": {
+      "types": "./src/compiled/wishlist.d.ts",
+      "default": "./src/compiled/wishlist.js"
+    }
+  },
+  "scripts": {
+    "proto:gen": "node src/generate_proto.mjs",
+    "proto:compile": "tsc",
+    "build": "npm run proto:gen && npm run proto:compile",
+    "clean": "rm -rf src/generated src/compiled"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.14.0"
+  },
+  "devDependencies": {
+    "ts-proto": "^2.7.7",
+    "typescript": "^5.9.2"
+  }
+}

@@ -1,0 +1,156 @@
+import React, { useEffect } from "react";
+import { Container, Row, Col } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import IconButton from "@mui/material/IconButton";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EmptyCart from "../components/EmptyCart";
+import Tooltip from "@mui/material/Tooltip";
+import CircularProgress from "@mui/material/CircularProgress";
+import useSelectors from "../customHooks/useSelectors";
+import {
+  fetchCartData,
+  removeProductFromCart,
+  updateCart,
+} from "../redux/features/cart/cart";
+import { useDispatch } from "react-redux";
+
+function Cart() {
+  const { cartData, user } = useSelectors();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    document.title = "Cart - Depot";
+
+    // Only fetch cart if user is logged in
+    if (user && user.accessToken) {
+      dispatch(fetchCartData());
+    }
+    // eslint-disable-next-line
+  }, [user?.email]);
+
+  // Show empty cart if not logged in
+  if (!user || !user.accessToken) {
+    return (
+      <Container className="cart">
+        <EmptyCart />
+        <p style={{ textAlign: "center", marginTop: "20px" }}>
+          Please log in to view your cart
+        </p>
+      </Container>
+    );
+  }
+
+  // Ensure cart is always an array
+  const cart = Array.isArray(cartData.cart) ? cartData.cart : [];
+
+  // Calculate total price safely
+  const total_price = cart.reduce((accumulator, item) => {
+    return accumulator + (item.price || 0) * (item.quantity || 0);
+  }, 0);
+
+  return (
+    <Container className="cart">
+      {cartData.loading ? (
+        <div className="loading">
+          <CircularProgress />
+        </div>
+      ) : cart.length === 0 ? (
+        <EmptyCart />
+      ) : (
+        <Row>
+          <Col xs={12} lg={8}>
+            {/* Cart Items Header */}
+            <Row className="cart-list">
+              <Col xs={2}>
+                <h5>Image</h5>
+              </Col>
+              <Col xs={3}>
+                <h5>Items</h5>
+              </Col>
+              <Col xs={2}>
+                <h5>Price</h5>
+              </Col>
+              <Col xs={3}>
+                <h5>Quantity</h5>
+              </Col>
+              <Col xs={2}>
+                <h5>Remove</h5>
+              </Col>
+            </Row>
+
+            {/* Cart Items */}
+            {cart.map((product, id) => (
+              <Row key={id} className="cart-list">
+                <Col xs={2}>
+                  <img src={product.image} alt="product-img" />
+                </Col>
+                <Col xs={3}>
+                  <Link to={`/product/${product.id}`}>
+                    <h5>{product.title}</h5>
+                  </Link>
+                </Col>
+                <Col xs={2}>
+                  <p>{`$ ${(product.price || 0).toFixed(2)}`}</p>
+                </Col>
+                <Col xs={3}>
+                  <select
+                    value={product.quantity}
+                    onChange={(e) => {
+                      dispatch(
+                        updateCart({
+                          product,
+                          quantity: parseInt(e.target.value),
+                        })
+                      );
+                    }}
+                  >
+                    {[...Array(10)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                      </option>
+                    ))}
+                  </select>
+                </Col>
+                <Col xs={2}>
+                  <Tooltip title="Remove from cart">
+                    <IconButton
+                      onClick={() => {
+                        dispatch(removeProductFromCart({ product }));
+                      }}
+                      aria-label="remove from cart"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Col>
+              </Row>
+            ))}
+          </Col>
+
+          {/* Cart Summary */}
+          <Col xs={12} lg={4}>
+            <div className="cart-totals">
+              <h3>CART TOTALS</h3>
+              <br />
+              <p>
+                <strong>Subtotal:</strong> ${total_price.toFixed(2)}
+              </p>
+              <p>
+                <strong>Shipping:</strong> Free
+              </p>
+              <hr />
+              <p>
+                <strong>Total:</strong> ${total_price.toFixed(2)}
+              </p>
+              <Link to="/checkout">
+                <button className="checkout">Proceed to Checkout</button>
+              </Link>
+            </div>
+          </Col>
+        </Row>
+      )}
+    </Container>
+  );
+}
+
+export default Cart;

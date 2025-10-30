@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package carts;
+
+message Cart {
+  int32 id = 1;
+  string title = 2;
+  int32 price = 3;
+  string image = 4;
+  int32 quantity = 5; 
+}
+
+message AddToCartRequest {
+  int32 id = 1;
+  int32 quantity = 2;
+}
+
+message AddToCartResponse {
+  Cart cart = 1;
+}
+
+message UpdateCartRequest {
+  int32 id = 1;
+  int32 quantity = 2;
+}
+
+message UpdateCartResponse {
+  repeated Cart carts = 1;
+}
+
+message DeleteCartRequest {
+  int32 id = 1;
+}
+
+message DeleteCartResponse {
+  Cart cart = 1;
+}
+
+message GetCartRequest {}
+
+message GetCartResponse {
+  repeated Cart carts = 1; 
+}
+
+message ClearCartRequest {}
+
+message ClearCartResponse {
+  repeated Cart carts = 1;
+}
+
+service CartService {
+  rpc AddToCart(AddToCartRequest) returns (AddToCartResponse);
+  rpc UpdateCart(UpdateCartRequest) returns (UpdateCartResponse);
+  rpc DeleteCart(DeleteCartRequest) returns (DeleteCartResponse);
+  rpc GetCart(GetCartRequest) returns (GetCartResponse);
+  rpc ClearCart(ClearCartRequest) returns (ClearCartResponse);
+}

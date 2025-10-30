@@ -1,0 +1,274 @@
+.checkout-page {
+  padding: 60px 0 100px;
+}
+
+.checkout-form h4 {
+  margin-top: 40px;
+  overflow-y: hidden;
+}
+
+.checkout-form h4:first-child {
+  margin-top: 0;
+}
+
+.MuiInputBase-root.MuiFilledInput-root.MuiFilledInput-underline.MuiInputBase-colorPrimary.MuiInputBase-fullWidth.MuiInputBase-formControl.MuiInputBase-sizeSmall.css-2y464i-MuiInputBase-root-MuiFilledInput-root {
+  overflow: hidden !important;
+}
+
+.saved-address {
+  margin-bottom: 40px;
+}
+
+.saved-address-col {
+  padding: 0 5px;
+  margin: 5px 0;
+  display: flex;
+}
+
+.address {
+  display: flex;
+  background-color: #f3f3f3;
+  padding: 10px 5px;
+  flex: 1 1;
+}
+
+.toggle-shipping {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.toggle-shipping p {
+  overflow: hidden;
+}
+
+.checkout-form p {
+  margin-bottom: 0;
+}
+
+.order-details {
+  padding-top: 80px !important;
+}
+
+.checkout-page h6 {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 1.5px;
+  overflow: hidden;
+}
+
+.checkout-page p {
+  overflow: hidden;
+}
+
+.order-details-row {
+  border-bottom: 1px solid rgba(206, 206, 206, 0.2);
+  padding: 10px 0;
+}
+
+@media only screen and (max-width: 768px) {
+  .checkout-page {
+    padding: 40px !important;
+  }
+
+  .toggle-shipping {
+    margin-top: 50px;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .checkout-page {
+    padding: 20px !important;
+  }
+}
+
+.checkout-cardDetails * {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+.checkout-cardDetails {
+  display: block;
+  color: white;
+  perspective: 1200px;
+  height: fit-content;
+  margin-top: 50px;
+}
+
+.checkout-cardDetails.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.checkout-card-container.isFlipped {
+  transform: rotateY(180deg);
+}
+
+.checkout-card-container {
+  transition: transform 500ms;
+  transform-style: preserve-3d;
+  height: 350px;
+  cursor: pointer;
+}
+
+.header {
+  display: flex;
+  flex-flow: row;
+  justify-content: space-between;
+}
+
+.checkout-cardDetails .card-type *,
+.logo * {
+  fill: white;
+}
+
+.checkout-cardDetails .logo svg {
+  height: 40px;
+}
+
+.checkout-cardDetails .card-type svg {
+  height: 30px;
+}
+
+.front-card,
+.back-card {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.25);
+  padding: 30px;
+  margin: 0;
+  transition: all 0.3s;
+  background-image: url("https://i.postimg.cc/2SpcMXVf/image-9.png");
+  background-color: rgba(0, 0, 0, 0.35);
+  background-blend-mode: darken;
+  background-size: cover;
+  backface-visibility: hidden;
+}
+
+.card-number {
+  margin: 50px 0 30px !important;
+}
+
+.card-number-field {
+  display: flex;
+  border: 2px solid #fff;
+  border-radius: 3px;
+  width: 75%;
+  height: 50px;
+}
+
+.card-number input {
+  background-color: transparent;
+  width: 100%;
+  height: 50px;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 5px;
+  text-align: center;
+  justify-content: center;
+  caret-color: #fff;
+}
+
+.card-details {
+  display: flex;
+  flex-flow: row;
+  justify-content: space-between;
+}
+
+.card-holder {
+  width: 50%;
+}
+
+.card-details input {
+  background-color: transparent;
+  width: 100%;
+  height: 50px;
+  border: 2px solid #fff;
+  border-radius: 3px;
+  outline: none;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 0 20px;
+  caret-color: #fff;
+}
+
+.card-details select {
+  background-color: transparent;
+  height: 50px;
+  border: 2px solid #fff;
+  border-radius: 3px;
+  outline: none;
+  color: #fff;
+  font-weight: 700;
+  padding: 0 5px;
+  margin-right: 10px;
+}
+
+.back-card {
+  transform: rotateY(180deg);
+}
+
+.mag-strip,
+.cvv {
+  height: 50px;
+  background-color: #000;
+  margin: 20px 0;
+}
+
+.cvv {
+  background: #fff;
+  border-radius: 5px;
+  margin: 0;
+}
+
+.cvv input {
+  background-color: transparent;
+  width: 100%;
+  height: 50px;
+  border-radius: 3px;
+  outline: none;
+  color: #000;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 0 20px;
+  caret-color: #000;
+}
+
+.back-card .card-type {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 40px;
+}
+
+.card-message {
+  margin-top: 30px;
+  text-align: center;
+  color: #929292;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+.submit-card-details {
+  margin-top: 20px !important;
+  background-color: #000;
+  color: #fff;
+  border: none;
+  outline: none;
+  padding: 10px 20px;
+  text-transform: uppercase;
+  font-size: 16px;
+  font-weight: "700";
+  letter-spacing: 2px;
+  text-decoration: none;
+  width: 100%;
+}

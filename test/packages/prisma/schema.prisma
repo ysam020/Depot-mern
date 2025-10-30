@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  email       String      @unique
+  password    String
+  orders      orders[]
+  cart        carts?
+  wishlists   wishlists[]
+  @@map("users")
+}
+
+model products {
+  id               Int       @id @default(autoincrement())
+  title            String
+  price            Float
+  short_description String
+  description      String
+  category         String
+  tags             String[]
+  sku              String     @unique
+  weight           String
+  dimensions       String
+  color            String
+  material         String
+  image            String
+  rating           Float
+  qty              Int
+  order_items      order_items[]
+  cart_items       cart_items[]
+  wishlists        wishlists[]
+  @@map("products")
+}
+
+model order_items {
+  id          Int       @id @default(autoincrement())
+  order_id    Int
+  product_id  Int
+  quantity    Int
+  price       Float
+  order       orders    @relation(fields: [order_id], references: [id])
+  product     products  @relation(fields: [product_id], references: [id])
+  @@map("order_items")
+}
+
+model carts {
+  id          Int         @id @default(autoincrement())
+  user_id     Int         @unique
+  created_at  DateTime    @default(now())
+  user        users       @relation(fields: [user_id], references: [id])
+  cart_items  cart_items[]
+  @@map("carts")
+}
+
+model cart_items {
+  id          Int       @id @default(autoincrement())
+  cart_id     Int
+  product_id  Int
+  quantity    Int
+  cart        carts     @relation(fields: [cart_id], references: [id])
+  product     products  @relation(fields: [product_id], references: [id])
+  @@map("cart_items")
+}
+
+model wishlists {
+  id          Int       @id @default(autoincrement())
+  user_id     Int
+  product_id  Int
+  user        users     @relation(fields: [user_id], references: [id])
+  product     products  @relation(fields: [product_id], references: [id])
+  @@map("wishlists")
+}
+
+// REMOVED: addresses model - no longer needed
+
+model orders {
+  id               Int           @id @default(autoincrement())
+  user_id          Int
+  total            Float
+  status           String        @default("pending")
+  created_at       DateTime      @default(now())
+  shipping_address String?       // Store as JSON string
+  user             users         @relation(fields: [user_id], references: [id])
+  order_items      order_items[]
+  payments         payments[]
+  @@map("orders")
+}
+
+model payments {
+  id                   Int      @id @default(autoincrement())
+  order_id             Int?
+  razorpay_order_id    String   @unique
+  razorpay_payment_id  String?  @unique
+  razorpay_signature   String?
+  amount               Int
+  currency             String   @default("INR")
+  status               String   @default("pending")
+  payment_method       String?
+  user_id              Int?
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  // Relation to orders
+  order                orders?  @relation(fields: [order_id], references: [id])
+
+  @@index([razorpay_order_id])
+  @@index([user_id])
+  @@index([order_id])
+}
